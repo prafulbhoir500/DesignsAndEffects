@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>PreLoader</title>
+<link href="Assets/bootstrap.css" rel="stylesheet" />
+    <script>
+        window.onload = function () {
+            //document.getElementById('loader').style.display = "none";
+            //document.getElementById('container').style.display = "block";
+
+            //$('#loader').fadeOut(3000);
+            //$('#container').fadeIn(3000);
+        }
+    </script>
+    <style>
+        #container{
+            display:none;
+            
+        }
+        #loader{
+            text-align:center;
+
+        }
+        .card {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <img src="https://i.pinimg.com/originals/78/e8/26/78e826ca1b9351214dfdd5e47f7e2024.gif" />
+    </div>
+    <main id="container" class="container">
+        <div class="card m-1">
+            <img id="img1" src="https://images.unsplash.com/photo-1617635277889-df22350f81a0?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        </div>
+
+        <div class="card m-1">
+            <img src="https://images.unsplash.com/photo-1628819115616-6a6b57361724?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        </div>
+
+        <div class="card m-1">
+            <img src="https://images.unsplash.com/photo-1628273072793-b501e63abbac?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        </div>
+
+        <div class="card m-1">
+            <img src="https://plus.unsplash.com/premium_photo-1701186493449-e0f1faa00e6d?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        </div>
+
+        <div class="card" m-1>
+            <img src="https://images.unsplash.com/photo-1624381131378-6a240089fe8d?q=80&w=1522&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+        </div>
+
+        <div class="card" m-1>
+            <img src="https://media.istockphoto.com/id/1188210700/photo/cardiff-bay-in-the-capital-of-wales.jpg?s=1024x1024&w=is&k=20&c=alfHrp2Gm6VVH677wamuhlAgy1D4XWyAvL4X3FXWZaM=" />
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#loader").fadeOut(3000, function () {
+                $("#container").fadeIn(2000);
+            });
+                
+        });
+    </script>
+
+</body>
+</html>
