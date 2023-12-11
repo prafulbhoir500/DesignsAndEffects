@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transition</title>
+    <style>
+
+        body{
+            background-color: black;
+        }
+        div{
+            background-image: url(https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG1vdW50YWlufGVufDB8fDB8fHww&auto=format&fit=crop&w=700&q=60);
+
+            width: 420px;
+            height: 240px;
+            border: 1px solid red;
+            background-size: cover;
+            background-position: top;
+            transition: all 1s ease-in;
+            background-color: #222;
+            background-blend-mode: hard-light;
+
+
+
+        }
+
+        div:hover{
+
+            background-position: center;
+            background-color: #999;
+            box-shadow: 0px 0px 6px white;
+
+        }
+
+        h1{
+            background-image: url(https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG1vdW50YWlufGVufDB8fDB8fHww&auto=format&fit=crop&w=700&q=60);
+
+            font-size: 200px;
+            background-position: top;
+            background-size: cover;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            transition: all 3s ease-in-out;
+            background-color: #222;
+            background-blend-mode: hard-light;
+        }
+
+        H1:hover{
+            font-size: 220px;
+            font-weight: bold;
+            background-position: center;
+            background-color: #999;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div>
+
+    </div>
+
+    <h1> Praful Bhoir</h1>
+    
+</body>
+</html>

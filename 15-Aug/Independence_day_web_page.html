@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Independence Day</title>
+    <link rel="icon" href="https://uxwing.com/wp-content/themes/uxwing/download/flags-landmarks/india-flag-icon.png">
+
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+            box-sizing: border-box;
+
+        }
+
+        .container {
+            background-image: url(https://4kwallpapers.com/images/walls/thumbs_3t/1546.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: top;
+            background-attachment: fixed;
+            height: 100vh;
+            width: 100%;
+            background-color: #fff;
+            background-blend-mode: multiply;
+            transition: all 1s ease-in-out;
+
+
+        }
+
+        .container:hover {
+            background-position: center;
+
+
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.5rem;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            width: 90vw;
+            margin: auto;
+            color: white;
+            font-weight: bold;
+            height: 100%;
+        }
+
+        .nav-items {
+            list-style-type: none;
+            display: flex;
+            gap: 20px;
+
+        }
+
+        .nav-list a {
+            text-decoration: none;
+            color: white;
+            padding: 5px;
+            transition: all 5s ease-in;
+
+        }
+
+        .nav-list a:hover {
+            /* background: rgb(27,122,26);
+background: linear-gradient(273deg, rgba(27,122,26,1) 15%, rgba(255,255,255,1) 49%, rgba(254,244,237,1) 51%, rgba(246,103,11,1) 90%); */
+            /* border: 2px solid white;
+            border-radius: 15px; */
+            text-decoration: underline;
+            /* color: blue; */
+            text-shadow: 0px 0px 8px white;
+            cursor: pointer;
+            box-shadow: 0px 0px 8px #fff;
+
+        }
+
+        .footer-text {
+            text-align: center;
+        }
+
+        .nav {
+            height: 10vh;
+
+        }
+
+        .home {
+            display: flex;
+            justify-content: space-around;
+
+        }
+
+        .home-text {
+            width: 50%;
+            height: 84vh;
+            /*box-shadow: 0px 0px 8px #fff inset;*/
+            background-color: rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: all 1s ease-in-out;
+            overflow: auto;
+        }
+
+        .home-text:hover {
+            box-shadow: 0px 0px 8px #fff;
+            background-color: rgba(255, 255, 255, 0.5);
+            text-shadow: 0px 0px 4px #999;
+        }
+
+        .home-image {
+            width: 40%;
+            /* background-color :rgba(255,255,255,0.4); */
+
+            background: rgb(27, 122, 26);
+            background: linear-gradient(0deg, rgba(27, 122, 26, 1) 7%, rgba(255, 248, 244, 1) 50%, rgba(246, 103, 11, 1) 89%);
+            box-shadow: 0px 0px 8px #999;
+
+
+        }
+
+        .img {
+            background-image: url(https://png.pngtree.com/png-vector/20220727/ourmid/pngtree-transparent-square-twibbon-of-75th-indian-independence-day-or-15-august-png-image_6068136.png), url(https://png.pngtree.com/png-vector/20220809/ourmid/pngtree-indian-independence-day-or-26-january-15-august-celebration-man-running-png-image_6104345.png);
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+            height: 84vh;
+        }
+
+        #img1 {
+            position: absolute;
+        }
+
+        #big {
+            font-size: 5.8rem;
+            color: orangered;
+        }
+
+        .para {
+            padding: 8px;
+            text-align: justify;
+            font-size: 1.5rem;
+        }
+
+        .a-img {
+            height: 10%;
+            width: 20%;
+            padding: 10px;
+        }
+
+        .card-header {
+            text-align: center;
+            color: #024707;
+            padding-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .card-body {
+            font-size: 1.4rem;
+            text-align: justify;
+        }
+
+        #img-1 {
+            float: right;
+        }
+
+        #img-2 {
+            float: left;
+        }
+
+        .main-flex{
+            margin: 0px 10px;
+            box-shadow: 0px 0px 8px #fff;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        .grid{
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 10px;
+            margin: 3% 10%;
+            grid-auto-rows: 120px;
+
+        }
+
+        .grid-box{
+            background-size: cover;
+            background-repeat: no-repeat;
+            box-shadow: 0px 0px 8px #fff;
+        }
+
+        .col-2{
+            grid-column: span 2;
+        }
+
+        .row-2{
+            grid-row: span 2;
+        }
+        .col-3{
+            grid-column: span 3;
+        }
+        #seed{
+            height: 7vh;
+            width: 8vw;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 3px;
+        }
+
+       
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- header start -->
+        <nav class="nav">
+            <div class="navbar">
+                <div class="logo" id="nav-logo">
+                    <img id="seed" src="https://th.bing.com/th/id/R.e66bd4c7321212aa489c9f3d2a1ac252?rik=EGzxg8cKiJ2UuA&riu=http%3a%2f%2fhortonworks.com%2fwp-content%2fuploads%2f2014%2f01%2fSEED-Logo-PNG.png&ehk=B9%2b%2bVVb6ABAHmP8KwVjwROabyzo80gl%2bZkdHNjvcNWU%3d&risl=&pid=ImgRaw&r=0" alt="Seed Infotech">
+                </div>
+
+                <div class="nav-menu" id="menu">
+                    <ul class="nav-items">
+                        <li class="nav-list"><a id="home" onclick="home()">Home</a></li>
+                        <li class="nav-list"><a id="gallary" onclick="gallary()">Gallary</a></li>
+                        <li class="nav-list"><a id="about" onclick="about()">History</a></li>
+                    </ul>
+                </div>
+
+            </div>
+        </nav>
+        <!-- header end -->
+
+        <!-- top part start -->
+        <div id="home-section">
+            <div class="home">
+                <div class="home-text">
+                    <h1 class="text-heading"><b id="big">15<i
+                                style="vertical-align : top; font-size: 30px;">th</i></b><b
+                            style="color: green;">AUGUST</b></h1>
+                    <h1 style="font-size: 2.7rem; color: blue;">Independence Day</h1>
+
+                    <p class="para">
+                        <strong>Independence Day</strong> is celebrated annually on 15 August as a public holiday in
+                        India
+                        commemorating the nation's independence from the United Kingdom on 15 August 1947, the day when
+                        the
+                        provisions of the Indian Independence Act, which transferred legislative sovereignty to the
+                        Indian
+                        Constituent Assembly, came into effect. India retained King George VI as head of state until its
+                        transition to a republic, when the Constitution of India came into effect on 26 January 1950
+                        (celebrated as Indian Republic Day) and replaced the dominion prefix, Dominion of India, with
+                        the
+                        enactment of the sovereign law Constitution of India. India attained independence following the
+                        independence movement noted for largely non-violent resistance and civil disobedience.
+                    </p>
+
+                </div>
+                <div class="home-image">
+                    <div class="img">
+                        <!-- <img id="img1" src=""> -->
+
+
+                        <!-- <img id="img2" src="https://png.pngtree.com/png-vector/20220809/ourmid/pngtree-indian-independence-day-or-26-january-15-august-celebration-man-running-png-image_6104345.png"> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- top part end  -->
+
+
+        <!-- gallary section start -->
+        <div id="gallary-section" class="gallary">
+            <div class="grid">
+                <div class="grid-box row-2" style="background-image: url(https://i.pinimg.com/originals/dd/08/5e/dd085ec0ab11076146e25b64b5857e87.jpg);"></div>
+                <div class="grid-box" style="background-image: url(https://wallpapercave.com/wp/wp6787787.jpg);"></div>
+                <div class="grid-box col-2" style="background-image: url(https://www.sarkarijobs.com/careerguide/wp-content/uploads/2022/07/how-to-join-indian-navy-article-1024x410.jpg);"></div>
+                <div class="grid-box col-2 row-2" style="background-image: url(https://www.desicomments.com/wp-content/uploads/Independence-Day-Picture1.jpg);"></div>
+                <div class="grid-box" style="background-image: url(https://ihpl.b-cdn.net/photo-gallery/delhi-gallery/fair-n-festivals/independence-day/Independence-Day-01-612.jpg);"></div>
+                <div class="grid-box" style="background-image: url(https://wallpapercave.com/wp/wp3400474.jpg);"></div>
+                <div class="grid-box row-2" style="background-image: url(https://th.bing.com/th/id/R.bdecdc45915d2c39c580c7095cb4be98?rik=WzUcrFDUU9RHhA&riu=http%3a%2f%2ftrendinindia.com%2fwp-content%2fuploads%2f2015%2f08%2fIndependence-Day-India-Images-6.jpg&ehk=U9VO3swXFQK1sWFLkikxXYQRzErpDffi50dZJvD6X3Y%3d&risl=&pid=ImgRaw&r=0);"></div>
+                <div class="grid-box col-3" style="background-image: url(https://im.indiatimes.in/facebook/2018/Jul/arjun_tank_1532928590.jpg);background-position: center; "></div>
+                
+            </div>
+        </div>
+
+
+        <!-- gallary section end -->
+
+        <!-- about section start -->
+        <div id="about-section" class="about">
+            <div class="main-flex">
+                <div class="flex-box" id="fb2">
+                    <div class="card-header">
+                        <h1>Independence Day History</h1>
+                    </div>
+                    <article style="height: 78vh; overflow: auto;">
+                        <div class="card-body">
+                            <p>
+                                <img class="a-img" id="img-1"
+                                    src="https://www.abhibus.com/blog/wp-content/uploads/2023/08/Independence-day.jpg">
+                                India’s Independence Day history is closely tied to its struggle for freedom from British
+                                colonial rule. Here’s a brief overview of the key events leading up to India’s independence:
+    
+                            <blockquote>
+                                <p>
+                                    <strong>British Colonial Rule:</strong> India had been under British rule for nearly two
+                                    centuries, starting
+                                    from the mid-18th century. The British East India Company initially established trade
+                                    and
+                                    gradually expanded its control over Indian territories.
+                                    Indian Independence Movement: As the 19th century progressed, India witnessed the rise
+                                    of a
+                                    nationalist movement seeking independence from British rule. Leaders like Mahatma
+                                    Gandhi,
+                                    Jawaharlal Nehru, Subhash Chandra Bose, Bhagat Singh, and many others played crucial
+                                    roles
+                                    in mobilizing the masses against British oppression.
+                                </p>
+                                <p>
+                                    <strong>Non-Cooperation Movement:</strong> In 1920, Mahatma Gandhi launched the
+                                    Non-Cooperation Movement,
+                                    urging Indians to boycott British institutions, goods, and services. This marked a
+                                    significant step towards India’s quest for independence.
+                                </p>
+                                <img class="a-img" id="img-2"
+                                    src="https://www.abhibus.com/blog/wp-content/uploads/2023/08/independence-day-2023-3-696x464.jpg">
+                                <p>
+                                    <strong>Civil Disobedience Movement:</strong> The Civil Disobedience Movement, initiated
+                                    by Gandhi in 1930,
+                                    further intensified the struggle. Indians participated in acts of civil disobedience,
+                                    including the famous Salt March in 1930, where Gandhi led a 240-mile journey to protest
+                                    against the British salt tax.
+                                </p>
+                                <p>
+                                    <strong>Quit India Movement:</strong> In 1942, during World War II, the Quit India
+                                    Movement was launched,
+                                    demanding an immediate end to British rule. Mass protests and civil disobedience
+                                    movements
+                                    spread across the country.
+                                </p>
+                                <strong>Independence and Partition:</strong> The pressure from the Indian independence
+                                movement, coupled with
+                                the weakening of British power after World War II, led to India’s independence. On August
+                                15, 1947, India finally gained freedom from British rule. The day also marked the partition
+                                of India, leading to the creation of Pakistan as a separate nation.
+                            </blockquote>
+                            </p>
+    
+    
+    
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- about section end -->
+
+
+
+    </div>
+</body>
+<script>
+    document.getElementById('gallary-section').style.display = "none";
+    document.getElementById('about-section').style.display = "none";
+    document.getElementById('home').style.textDecoration = "underline";
+
+    function home() {
+        document.getElementById('home-section').style.display = "block";
+        document.getElementById('gallary-section').style.display = "none";
+        document.getElementById('about-section').style.display = "none";
+        document.getElementById('home').style.textDecoration = "underline";
+        document.getElementById('gallary').style.textDecoration = "none";
+        document.getElementById('about').style.textDecoration = "none";
+    }
+
+    function gallary() {
+        document.getElementById('home-section').style.display = "none";
+        document.getElementById('gallary-section').style.display = "block";
+        document.getElementById('about-section').style.display = "none";
+
+        document.getElementById('home').style.textDecoration = "none";
+        document.getElementById('gallary').style.textDecoration = "underline";
+        document.getElementById('about').style.textDecoration = "none";
+    }
+
+    function about() {
+        document.getElementById('home-section').style.display = "none";
+        document.getElementById('gallary-section').style.display = "none";
+        document.getElementById('about-section').style.display = "block";
+
+        document.getElementById('home').style.textDecoration = "none";
+        document.getElementById('gallary').style.textDecoration = "none";
+        document.getElementById('about').style.textDecoration = "underline";
+    }
+
+</script>
+
+</html>

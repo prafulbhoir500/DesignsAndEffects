@@ -67,7 +67,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="15-Aug\gallary.html" />
+    <Content Include="15-Aug\Independence_day_web_page.html" />
+    <Content Include="15-Aug\index.html" />
+    <Content Include="15-Aug\ph.jpg" />
+    <Content Include="15-Aug\style.css" />
     <Content Include="Assets\bootstrap.css" />
+    <Content Include="gallary_portfolio\flex.html" />
+    <Content Include="gallary_portfolio\index.html" />
+    <Content Include="gallary_portfolio\navbar.html" />
+    <Content Include="gallary_portfolio\style.css" />
+    <Content Include="gallary_portfolio\transition_effent.html" />
     <Content Include="Global.asax" />
     <Content Include="SectionEffects.html" />
     <Content Include="Web.config" />
