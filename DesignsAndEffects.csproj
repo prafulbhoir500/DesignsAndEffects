@@ -80,6 +80,7 @@
     <Content Include="gallary_portfolio\transition_effent.html" />
     <Content Include="Global.asax" />
     <Content Include="SectionEffects.html" />
+    <Content Include="TimeLine\Simple Timeline.html" />
     <Content Include="Web.config" />
     <Content Include="WebPageWithPreLoader.html" />
   </ItemGroup>
