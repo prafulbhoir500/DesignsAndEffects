@@ -79,6 +79,11 @@
     <Content Include="gallary_portfolio\style.css" />
     <Content Include="gallary_portfolio\transition_effent.html" />
     <Content Include="Global.asax" />
+    <Content Include="NavbarLinks\NavbarLinkWithPages\AboutUs.aspx" />
+    <Content Include="NavbarLinks\NavbarLinkWithPages\ContactUs.aspx" />
+    <Content Include="NavbarLinks\NavbarLinkWithPages\Home.aspx" />
+    <Content Include="NavbarLinks\NavbarLinkWithPages\Blog.aspx" />
+    <Content Include="NavbarLinks\NavbarWithSectionActiveLinks.aspx" />
     <Content Include="SectionEffects.html" />
     <Content Include="TimeLine\Simple Timeline.html" />
     <Content Include="Web.config" />
@@ -88,9 +93,52 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\AboutUs.aspx.cs">
+      <DependentUpon>AboutUs.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\AboutUs.aspx.designer.cs">
+      <DependentUpon>AboutUs.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\ContactUs.aspx.cs">
+      <DependentUpon>ContactUs.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\ContactUs.aspx.designer.cs">
+      <DependentUpon>ContactUs.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\Home.aspx.cs">
+      <DependentUpon>Home.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\Home.aspx.designer.cs">
+      <DependentUpon>Home.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\Blog.aspx.cs">
+      <DependentUpon>Blog.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\Blog.aspx.designer.cs">
+      <DependentUpon>Blog.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\Site1.Master.cs">
+      <DependentUpon>Site1.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarLinkWithPages\Site1.Master.designer.cs">
+      <DependentUpon>Site1.Master</DependentUpon>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarWithSectionActiveLinks.aspx.cs">
+      <DependentUpon>NavbarWithSectionActiveLinks.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="NavbarLinks\NavbarWithSectionActiveLinks.aspx.designer.cs">
+      <DependentUpon>NavbarWithSectionActiveLinks.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="NavbarLinks\NavbarLinkWithPages\Site1.Master" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
