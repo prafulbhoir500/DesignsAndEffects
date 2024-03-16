@@ -1,1 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CheckboxList Example</title>
+    <script>
+        function updateLabel() {
+            var selectedItems = [];
+            var checkboxes = document.querySelectorAll('[id*=chkItems] input[type=checkbox]');
+            
+            for (var i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].checked) {
+                    selectedItems.push(checkboxes[i].parentNode.innerText.trim());
+                }
+            }
+            
+            document.getElementById('lblSelectedItems').innerText = selectedItems.join(', ');
+        }
+    </script>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <asp:CheckBoxList ID="chkItems" runat="server" RepeatLayout="Flow" onchange="updateLabel()">
+            <asp:ListItem Text="Item 1" Value="1" />
+            <asp:ListItem Text="Item 2" Value="2" />
+            <asp:ListItem Text="Item 3" Value="3" />
+            <asp:ListItem Text="Item 4" Value="4" />
+            <asp:ListItem Text="Item 5" Value="5" />
+        </asp:CheckBoxList>
+        <br />
+        <br />
+        <label>Selected items:</label>
+        <br />
+        <label id="lblSelectedItems"></label>
+    </form>
+</body>
+</html>
 
