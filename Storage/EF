@@ -1,0 +1,10 @@
+var result = from firstTable in dbContext.FirstTable
+             select new 
+             {
+                 Id = firstTable.Id,
+                 LastDate = dbContext.SecondTable
+                            .Where(second => second.FirstTableId == firstTable.Id)
+                            .OrderByDescending(second => second.Date)
+                            .Select(second => second.Date)
+                            .FirstOrDefault() ?? DateTime.MinValue
+             };
