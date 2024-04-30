@@ -1,0 +1,22 @@
+<asp:TextBox ID="txtFromDate" runat="server"></asp:TextBox>
+<ajaxToolkit:CalendarExtender ID="CalendarExtenderFromDate" runat="server" 
+    TargetControlID="txtFromDate">
+</ajaxToolkit:CalendarExtender>
+
+<asp:TextBox ID="txtToDate" runat="server"></asp:TextBox>
+<ajaxToolkit:CalendarExtender ID="CalendarExtenderToDate" runat="server" 
+    TargetControlID="txtToDate">
+</ajaxToolkit:CalendarExtender>
+
+<ajaxToolkit:CalendarExtender ID="CalendarExtenderFromDate" runat="server" 
+    TargetControlID="txtFromDate" 
+    OnClientShown="setEndDate">
+</ajaxToolkit:CalendarExtender>
+
+<script type="text/javascript">
+    function setEndDate(sender, args) {
+        var fromDate = document.getElementById('<%= txtFromDate.ClientID %>').value;
+        var toDateCalendar = $find('<%= CalendarExtenderToDate.ClientID %>');
+        toDateCalendar._startDate = fromDate;
+    }
+</script>
