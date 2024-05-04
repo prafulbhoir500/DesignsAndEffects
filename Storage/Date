@@ -20,3 +20,15 @@
         toDateCalendar._startDate = fromDate;
     }
 </script>
+
+
+
+// Assuming you have a collection of Entry objects named 'entries'
+
+var averagesByType = entries.GroupBy(e => e.Type)
+                            .Select(g => new
+                            {
+                                Type = g.Key,
+                                AverageInterest = g.Average(e => e.Interest),
+                                AverageAmount = g.Average(e => e.Amount)
+                            }).ToList();
