@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBFC Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+            }
+        }
+
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .notification-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-item:hover {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+            border-left: 3px solid #3b82f6;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .refresh-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Custom styles for fixed sidebar and responsive layout */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 40;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .main-content {
+            margin-left: 0;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 16rem;
+                /* 64 * 4 = 256px (w-64) */
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 30;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile chart adjustments */
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* Upload card styles */
+        .upload-card {
+            transition: all 0.3s ease;
+        }
+
+        .upload-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal styles */
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Progress bar animation */
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+
+        /* File drag area */
+        .file-drop-area {
+            transition: all 0.3s ease;
+        }
+
+        .file-drop-area.dragover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        /* Table styles */
+        .table-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fixed-column {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: white;
+            z-index: 10;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .scrollable-table {
+            margin-left: 120px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background-color: #f9fafb;
+            text-align: left;
+            padding: 12px 8px;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            white-space: nowrap;
+        }
+
+        .data-table tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .fixed-table {
+            border-collapse: collapse;
+        }
+
+        .fixed-table th {
+            background-color: #f9fafb;
+            text-align: left;
+            padding: 12px 8px;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .fixed-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            white-space: nowrap;
+        }
+
+        .summary-row {
+            background-color: #f0f9ff;
+            font-weight: 600;
+        }
+
+        .summary-row td {
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .summary-fixed-row {
+            background-color: #f0f9ff;
+            font-weight: 600;
+        }
+
+        .summary-fixed-row td {
+            border-top: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+        <div class="px-4 lg:px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+                <h1 class="text-xl lg:text-2xl font-bold text-gray-800">FinCorp Analytics</h1>
+            </div>
+            <div class="flex items-center space-x-4 lg:space-x-6">
+                <div class="relative">
+                    <i class="fas fa-bell text-gray-600 text-xl cursor-pointer hover:text-blue-600 transition"></i>
+                    <span class="notification-dot absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <img src="https://picsum.photos/seed/user1/40/40.jpg" alt="User" class="w-10 h-10 rounded-full">
+                    <div class="hidden sm:block">
+                        <p class="text-sm font-semibold text-gray-800">John Doe</p>
+                        <p class="text-xs text-gray-500">Branch Manager</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 bg-white shadow-lg">
+        <nav class="mt-16 lg:mt-8">
+            <div class="px-6 space-y-2">
+                <a href="#"
+                    class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg bg-blue-50 text-blue-600"
+                    data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg"
+                    data-page="loans">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Loans</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg"
+                    data-page="customers">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg"
+                    data-page="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg"
+                    data-page="risk">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Risk Management</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg"
+                    data-page="uploads">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Work Uploads</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg"
+                    data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay"></div>
+    <!-- Main Content -->
+    <main class="main-content pt-20 lg:pt-24 px-4 lg:px-6 pb-8">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page">
+            <!-- Date Controls and Refresh -->
+            <div class="bg-white rounded-xl shadow-md p-4 lg:p-6 mb-6">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <div class="w-full sm:w-auto">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Financial Year</label>
+                            <select id="financialYear"
+                                class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="2022-23">2022-23</option>
+                                <option value="2023-24" selected>2023-24</option>
+                                <option value="2024-25">2024-25</option>
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-auto">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                            <select id="month"
+                                class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6" selected>June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="refreshBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition flex items-center space-x-2 self-end lg:self-auto">
+                        <i id="refreshIcon" class="fas fa-sync-alt"></i>
+                        <span>Refresh Data</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-green-600 font-semibold">+12.5%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">Total Portfolio</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">₹45.2 Cr</p>
+                </div>
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-green-600 font-semibold">+8.3%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">Disbursement</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">₹12.8 Cr</p>
+                </div>
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-users text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-green-600 font-semibold">+5.2%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">Active Customers</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">8,542</p>
+                </div>
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-orange-100 p-3 rounded-lg">
+                            <i class="fas fa-percentage text-orange-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-red-600 font-semibold">-2.1%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">NPA Ratio</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">3.45%</p>
+                </div>
+            </div>
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <!-- Loan Portfolio Chart -->
+                <div class="bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+                        <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-2 sm:mb-0">Loan Portfolio
+                            Distribution</h2>
+                        <select
+                            class="text-xs lg:text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>Last 30 Days</option>
+                            <option>Last 90 Days</option>
+                            <option>Last Year</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                </div>
+                <!-- Monthly Performance -->
+                <div class="bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base lg:text-lg font-semibold text-gray-800">Monthly Performance</h2>
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Section: Regional Data Analysis -->
+            <div class="bg-white rounded-xl shadow-md p-4 lg:p-6 mb-6 lg:mb-8">
+                <h2 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">Regional Data Analysis</h2>
+
+                <!-- Regional Data Table with Fixed Column -->
+                <div class="mb-6 table-wrapper">
+                    <!-- Fixed Regions Column -->
+                    <div class="fixed-column" style="width: 120px;">
+                        <table class="fixed-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 120px;">Regions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fixedTableBody">
+                                <tr>
+                                    <td class="font-medium">Gujarat</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">MMR</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Pune</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">NCR</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">South</td>
+                                </tr>
+                                <tr class="summary-fixed-row">
+                                    <td class="font-medium">PAN India</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Scrollable Table -->
+                    <div class="scrollable-table">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No of Loans</th>
+                                    <th>No. of DCCO</th>
+                                    <th>WAROI</th>
+                                    <th>WAROI New Cases</th>
+                                    <th>Sanctioned Amt in Crs</th>
+                                    <th>Disbursed Amt in Crs</th>
+                                    <th>Undisbursed Amt in Crs</th>
+                                    <th>Exposure in Crs</th>
+                                    <th>Budgeted AUM</th>
+                                    <th>Actual AUM</th>
+                                    <th>Variance AUM</th>
+                                    <th>Budgeted Income</th>
+                                    <th>Actual Income</th>
+                                    <th>Variance Income</th>
+                                    <th>PF Income</th>
+                                    <th>Total Income</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scrollableTableBody">
+                                <tr>
+                                    <td>89</td>
+                                    <td>12</td>
+                                    <td>45</td>
+                                    <td>8</td>
+                                    <td>1150.50</td>
+                                    <td>1092.80</td>
+                                    <td>57.70</td>
+                                    <td>1092.80</td>
+                                    <td>1050.00</td>
+                                    <td>1092.80</td>
+                                    <td class="text-green-600">+4.1%</td>
+                                    <td>52.50</td>
+                                    <td>54.64</td>
+                                    <td class="text-green-600">+4.1%</td>
+                                    <td>5.46</td>
+                                    <td>60.10</td>
+                                </tr>
+                                <tr>
+                                    <td>142</td>
+                                    <td>18</td>
+                                    <td>72</td>
+                                    <td>15</td>
+                                    <td>1950.00</td>
+                                    <td>1856.50</td>
+                                    <td>93.50</td>
+                                    <td>1856.50</td>
+                                    <td>1900.00</td>
+                                    <td>1856.50</td>
+                                    <td class="text-red-600">-2.3%</td>
+                                    <td>95.00</td>
+                                    <td>92.83</td>
+                                    <td class="text-red-600">-2.3%</td>
+                                    <td>9.28</td>
+                                    <td>102.11</td>
+                                </tr>
+                                <tr>
+                                    <td>76</td>
+                                    <td>10</td>
+                                    <td>38</td>
+                                    <td>6</td>
+                                    <td>995.00</td>
+                                    <td>945.30</td>
+                                    <td>49.70</td>
+                                    <td>945.30</td>
+                                    <td>920.00</td>
+                                    <td>945.30</td>
+                                    <td class="text-green-600">+2.8%</td>
+                                    <td>46.00</td>
+                                    <td>47.27</td>
+                                    <td class="text-green-600">+2.8%</td>
+                                    <td>4.73</td>
+                                    <td>52.00</td>
+                                </tr>
+                                <tr>
+                                    <td>125</td>
+                                    <td>15</td>
+                                    <td>63</td>
+                                    <td>12</td>
+                                    <td>1720.00</td>
+                                    <td>1634.75</td>
+                                    <td>85.25</td>
+                                    <td>1634.75</td>
+                                    <td>1650.00</td>
+                                    <td>1634.75</td>
+                                    <td class="text-red-600">-0.9%</td>
+                                    <td>82.50</td>
+                                    <td>81.74</td>
+                                    <td class="text-red-600">-0.9%</td>
+                                    <td>8.17</td>
+                                    <td>89.91</td>
+                                </tr>
+                                <tr>
+                                    <td>98</td>
+                                    <td>13</td>
+                                    <td>49</td>
+                                    <td>9</td>
+                                    <td>1345.00</td>
+                                    <td>1278.40</td>
+                                    <td>66.60</td>
+                                    <td>1278.40</td>
+                                    <td>1200.00</td>
+                                    <td>1278.40</td>
+                                    <td class="text-green-600">+6.5%</td>
+                                    <td>60.00</td>
+                                    <td>63.92</td>
+                                    <td class="text-green-600">+6.5%</td>
+                                    <td>6.39</td>
+                                    <td>70.31</td>
+                                </tr>
+                                <tr class="summary-row">
+                                    <td>530</td>
+                                    <td>68</td>
+                                    <td>267</td>
+                                    <td>50</td>
+                                    <td>7160.50</td>
+                                    <td>6807.75</td>
+                                    <td>352.75</td>
+                                    <td>6807.75</td>
+                                    <td>6720.00</td>
+                                    <td>6807.75</td>
+                                    <td class="text-green-600">+1.3%</td>
+                                    <td>336.00</td>
+                                    <td>340.39</td>
+                                    <td class="text-green-600">+1.3%</td>
+                                    <td>34.04</td>
+                                    <td>374.43</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- POS Budget Vs Actual Chart -->
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-800 mb-4">POS Budget Vs Actual</h3>
+                        <div class="chart-container">
+                            <canvas id="budgetVsActualChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- ACTUAL AUM Pie Chart -->
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-800 mb-4">ACTUAL AUM Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="actualAumChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities & Risk Assessment -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                <!-- Recent Activities -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Recent Activities</h2>
+                    <div class="space-y-3 lg:space-y-4">
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-green-100 p-2 rounded-full">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">Loan Approved</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Rajesh Kumar - Personal Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">₹5,00,000</p>
+                                <p class="text-xs text-gray-500">2 mins ago</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-yellow-100 p-2 rounded-full">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">Payment Due</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Priya Singh - Business Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">₹45,000</p>
+                                <p class="text-xs text-gray-500">1 hour ago</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-blue-100 p-2 rounded-full">
+                                    <i class="fas fa-user-plus text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">New Customer</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Amit Patel - Registered</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">-</p>
+                                <p class="text-xs text-gray-500">3 hours ago</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-red-100 p-2 rounded-full">
+                                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">Overdue Alert</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Sunil Mehta - Home Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">₹78,000</p>
+                                <p class="text-xs text-gray-500">5 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Risk Assessment -->
+                <div class="bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Risk Assessment</h2>
+                    <div class="space-y-3 lg:space-y-4">
+                        <div class="p-3 lg:p-4 bg-green-50 rounded-lg border border-green-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs lg:text-sm font-semibold text-green-800">Low Risk</span>
+                                <span class="text-xl lg:text-2xl font-bold text-green-600">72%</span>
+                            </div>
+                            <div class="w-full bg-green-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 72%"></div>
+                            </div>
+                        </div>
+                        <div class="p-3 lg:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs lg:text-sm font-semibold text-yellow-800">Medium Risk</span>
+                                <span class="text-xl lg:text-2xl font-bold text-yellow-600">21%</span>
+                            </div>
+                            <div class="w-full bg-yellow-200 rounded-full h-2">
+                                <div class="bg-yellow-600 h-2 rounded-full" style="width: 21%"></div>
+                            </div>
+                        </div>
+                        <div class="p-3 lg:p-4 bg-red-50 rounded-lg border border-red-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs lg:text-sm font-semibold text-red-800">High Risk</span>
+                                <span class="text-xl lg:text-2xl font-bold text-red-600">7%</span>
+                            </div>
+                            <div class="w-full bg-red-200 rounded-full h-2">
+                                <div class="bg-red-600 h-2 rounded-full" style="width: 7%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="w-full mt-4 lg:mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center space-x-2 text-sm">
+                        <i class="fas fa-download"></i>
+                        <span>Download Report</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Quick Actions -->
+            <div
+                class="mt-6 lg:mt-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-4 lg:p-6 text-white">
+                <h2 class="text-lg lg:text-xl font-semibold mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-plus-circle text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">New Loan</span>
+                    </button>
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-user-check text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">KYC Verify</span>
+                    </button>
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-file-invoice text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">Generate Report</span>
+                    </button>
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-phone-alt text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">Contact Support</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Work Uploads Page -->
+        <div id="uploads-page" class="hidden">
+            <div class="bg-white rounded-xl shadow-md p-4 lg:p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="backToDashboard" class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Work Uploads</h1>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>
+                        Last updated: <span id="lastUpdated">Today, 10:30 AM</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Write Offs Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-red-100 p-3 rounded-lg">
+                            <i class="fas fa-file-times text-red-600 text-xl"></i>
+                        </div>
+                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">System
+                            Data</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Write Offs</h3>
+                    <p class="text-gray-600 text-sm mb-4">View and manage loan write-off data from the system</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Last updated: 2 days ago</span>
+                        <button
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Suit Filed Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-gavel text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">System
+                            Data</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Suit Filed</h3>
+                    <p class="text-gray-600 text-sm mb-4">Access legal case filings and court proceedings</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Last updated: 1 week ago</span>
+                        <button
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- CE-Upload Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-file-upload text-yellow-600 text-xl"></i>
+                        </div>
+                        <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">User
+                            Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">CE-Upload</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload customer engagement and communication data</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">No recent uploads</span>
+                        <button
+                            class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1"
+                            data-upload-type="CE-Upload">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Project Upload Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-project-diagram text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">User
+                            Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Project Upload</h3>
+                    <p class="text-gray-600 text-sm mb-4">Submit project proposals and related documents</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Last upload: 3 days ago</span>
+                        <button
+                            class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1"
+                            data-upload-type="Project Upload">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Budget Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-calculator text-green-600 text-xl"></i>
+                        </div>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">User
+                            Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Budget</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload departmental and project budget files</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Last upload: 1 week ago</span>
+                        <button
+                            class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1"
+                            data-upload-type="Budget">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Additional Upload Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-indigo-100 p-3 rounded-lg">
+                            <i class="fas fa-file-alt text-indigo-600 text-xl"></i>
+                        </div>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">User
+                            Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Reports</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload monthly and quarterly reports</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">No recent uploads</span>
+                        <button
+                            class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1"
+                            data-upload-type="Reports">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Upload Modal -->
+    <div id="uploadModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Upload <span id="uploadType">File</span></h3>
+                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="mb-6">
+                    <div class="file-drop-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer"
+                        id="fileDropArea">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 mb-2">Drag & drop your file here</p>
+                        <p class="text-gray-500 text-sm mb-4">or</p>
+                        <label for="fileInput"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition cursor-pointer inline-block">
+                            Browse Files
+                        </label>
+                        <input type="file" id="fileInput" class="hidden">
+                        <p class="text-gray-500 text-xs mt-4">Supported formats: PDF, DOC, XLSX (Max 10MB)</p>
+                    </div>
+                    <div id="fileInfo" class="mt-4 hidden">
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-file text-gray-500"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800" id="fileName">filename.pdf</p>
+                                    <p class="text-xs text-gray-500" id="fileSize">2.4 MB</p>
+                                </div>
+                            </div>
+                            <button id="removeFile" class="text-gray-500 hover:text-red-500">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="uploadProgress" class="mb-4 hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-gray-700">Uploading...</span>
+                        <span class="text-sm font-medium text-gray-700" id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="progress-bar bg-blue-600 h-2.5 rounded-full" style="width: 0%">
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelUpload"
+                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                        Cancel
+                    </button>
+                    <button id="confirmUpload"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50"
+                        disabled>
+                        Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('overlay');
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+        // Page navigation
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const uploadsPage = document.getElementById('uploads-page');
+        const backToDashboard = document.getElementById('backToDashboard');
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                // Remove active class from all items
+                sidebarItems.forEach(i => i.classList.remove('bg-blue-50', 'text-blue-600'));
+                // Add active class to clicked item
+                this.classList.add('bg-blue-50', 'text-blue-600');
+                // Hide all pages
+                dashboardPage.classList.add('hidden');
+                uploadsPage.classList.add('hidden');
+                // Show selected page
+                if (page === 'uploads') {
+                    uploadsPage.classList.remove('hidden');
+                    updateLastUpdated();
+                } else {
+                    dashboardPage.classList.remove('hidden');
+                }
+                // Close mobile menu after selection
+                if (window.innerWidth < 1024) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+        backToDashboard.addEventListener('click', () => {
+            uploadsPage.classList.add('hidden');
+            dashboardPage.classList.remove('hidden');
+            // Update active sidebar item
+            sidebarItems.forEach(i => i.classList.remove('bg-blue-50', 'text-blue-600'));
+            document.querySelector('[data-page="dashboard"]').classList.add('bg-blue-50', 'text-blue-600');
+        });
+        // Update last updated time
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lastUpdated').textContent = `Today, ${timeString}`;
+        }
+        // Upload modal functionality
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadButtons = document.querySelectorAll('.upload-button');
+        const closeModal = document.getElementById('closeModal');
+        const cancelUpload = document.getElementById('cancelUpload');
+        const confirmUpload = document.getElementById('confirmUpload');
+        const fileDropArea = document.getElementById('fileDropArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const uploadType = document.getElementById('uploadType');
+        let selectedFile = null;
+        uploadButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.getAttribute('data-upload-type');
+                uploadType.textContent = type;
+                uploadModal.classList.remove('hidden');
+                resetModal();
+            });
+        });
+        closeModal.addEventListener('click', () => {
+            uploadModal.classList.add('hidden');
+        });
+        cancelUpload.addEventListener('click', () => {
+            uploadModal.classList.add('hidden');
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+        // Drag and drop functionality
+        fileDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropArea.classList.add('dragover');
+        });
+        fileDropArea.addEventListener('dragleave', () => {
+            fileDropArea.classList.remove('dragover');
+        });
+        fileDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFileSelection(e.dataTransfer.files[0]);
+            }
+        });
+        function handleFileSelection(file) {
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.remove('hidden');
+            confirmUpload.disabled = false;
+        }
+        removeFile.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            confirmUpload.disabled = true;
+        });
+        confirmUpload.addEventListener('click', () => {
+            if (!selectedFile) return;
+            // Show progress
+            uploadProgress.classList.remove('hidden');
+            confirmUpload.disabled = true;
+            // Simulate upload progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                progressPercent.textContent = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    // Show success message
+                    setTimeout(() => {
+                        uploadModal.classList.add('hidden');
+                        showNotification(`File uploaded successfully to ${uploadType.textContent}`);
+                        resetModal();
+                        updateLastUpdated();
+                    }, 500);
+                }
+            }, 200);
+        });
+        function resetModal() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            uploadProgress.classList.add('hidden');
+            confirmUpload.disabled = true;
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+        }
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        // Chart instances
+        let portfolioChart, performanceChart, budgetVsActualChart, actualAumChart;
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function () {
+            // Portfolio Distribution Chart
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            portfolioChart = new Chart(portfolioCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Personal Loan', 'Home Loan', 'Business Loan', 'Vehicle Loan', 'Education Loan'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            // Monthly Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Disbursement',
+                        data: [8.5, 9.2, 10.1, 11.3, 12.0, 12.8],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Collection',
+                        data: [7.8, 8.5, 9.2, 10.5, 11.2, 11.9],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '₹' + value + ' Cr';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // New POS Budget Vs Actual Chart
+            const budgetVsActualCtx = document.getElementById('budgetVsActualChart').getContext('2d');
+            budgetVsActualChart = new Chart(budgetVsActualCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gujarat', 'MMR', 'Pune', 'NCR', 'South'],
+                    datasets: [
+                        {
+                            label: 'Budgeted AUM',
+                            data: [1050, 1900, 920, 1650, 1200],
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Actual AUM',
+                            data: [1092.8, 1856.5, 945.3, 1634.75, 1278.4],
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: '#10b981',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'AUM (in Cr)',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // New ACTUAL AUM Pie Chart
+            const actualAumCtx = document.getElementById('actualAumChart').getContext('2d');
+            actualAumChart = new Chart(actualAumCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Gujarat', 'MMR', 'Pune', 'NCR', 'South'],
+                    datasets: [{
+                        data: [1092.8, 1856.5, 945.3, 1634.75, 1278.4],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                },
+                                generateLabels: function (chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        return data.labels.map((label, i) => {
+                                            const value = data.datasets[0].data[i];
+                                            const percentage = Math.round((value / total) * 100);
+                                            return {
+                                                text: `${label}: ${percentage}%`,
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ₹${value} Cr (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Simulate real-time updates
+            setInterval(() => {
+                // Update metrics with random variations
+                const portfolioValue = document.querySelector('.metric-card p');
+                const currentValue = parseFloat(portfolioValue.textContent.replace('₹', '').replace(' Cr', ''));
+                const newValue = (currentValue + (Math.random() - 0.5) * 0.1).toFixed(1);
+                portfolioValue.textContent = `₹${newValue} Cr`;
+            }, 5000);
+            // Quick action buttons
+            document.querySelectorAll('.bg-gradient-to-r button').forEach(button => {
+                button.addEventListener('click', function () {
+                    // Create a temporary notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+                    notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Action initiated successfully!`;
+                    document.body.appendChild(notification);
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(0)';
+                    }, 100);
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(100%)';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                });
+            });
+            // Financial year and month change handlers
+            document.getElementById('financialYear').addEventListener('change', updateDashboard);
+            document.getElementById('month').addEventListener('change', updateDashboard);
+            // Refresh button handler
+            document.getElementById('refreshBtn').addEventListener('click', refreshData);
+        });
+        // Update dashboard when financial year or month changes
+        function updateDashboard() {
+            const financialYear = document.getElementById('financialYear').value;
+            const month = document.getElementById('month').value;
+            // Show loading state
+            showLoading();
+            // Simulate API call delay
+            setTimeout(() => {
+                // Update charts with new data based on selection
+                updateChartsData(financialYear, month);
+                updateMetrics(financialYear, month);
+                // Hide loading state
+                hideLoading();
+                // Show notification
+                showNotification(`Data updated for ${getMonthName(month)} ${financialYear}`);
+            }, 1000);
+        }
+        // Refresh data function
+        function refreshData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.classList.add('refresh-spin');
+            // Show loading state
+            showLoading();
+            // Simulate API call
+            setTimeout(() => {
+                // Generate new random data
+                updateChartsData();
+                updateMetrics();
+                // Hide loading state
+                hideLoading();
+                refreshIcon.classList.remove('refresh-spin');
+                // Show notification
+                showNotification('Data refreshed successfully!');
+            }, 1500);
+        }
+        // Show loading state
+        function showLoading() {
+            // Add loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlay';
+            loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            loadingOverlay.innerHTML = `
+                <div class="bg-white rounded-lg p-6 flex flex-col items-center space-y-4">
+                    <div class="loading-spinner"></div>
+                    <p class="text-gray-700">Loading data...</p>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+        }
+        // Hide loading state
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.remove();
+            }
+        }
+        // Update charts with new data
+        function updateChartsData(financialYear = '2023-24', month = '6') {
+            // Generate random data based on selection
+            const portfolioData = [
+                Math.floor(Math.random() * 20) + 30,
+                Math.floor(Math.random() * 15) + 20,
+                Math.floor(Math.random() * 15) + 15,
+                Math.floor(Math.random() * 10) + 10,
+                Math.floor(Math.random() * 10) + 5
+            ];
+            const performanceData = {
+                disbursement: Array.from({ length: 6 }, () => Math.random() * 5 + 8),
+                collection: Array.from({ length: 6 }, () => Math.random() * 4 + 7)
+            };
+
+            // Regional data for new charts
+            const regions = ['Gujarat', 'MMR', 'Pune', 'NCR', 'South'];
+            const budgetData = regions.map(() => Math.floor(Math.random() * 1000) + 900);
+            const actualData = regions.map(() => Math.floor(Math.random() * 1000) + 900);
+
+            // Update portfolio chart
+            portfolioChart.data.datasets[0].data = portfolioData;
+            portfolioChart.update();
+
+            // Update performance chart
+            performanceChart.data.datasets[0].data = performanceData.disbursement;
+            performanceChart.data.datasets[1].data = performanceData.collection;
+            performanceChart.update();
+
+            // Update budget vs actual chart
+            budgetVsActualChart.data.datasets[0].data = budgetData;
+            budgetVsActualChart.data.datasets[1].data = actualData;
+            budgetVsActualChart.update();
+
+            // Update actual AUM pie chart
+            actualAumChart.data.datasets[0].data = actualData;
+            actualAumChart.update();
+
+            // Update table data
+            updateRegionalTableData(regions, actualData, budgetData);
+        }
+
+        // Update regional table data
+        function updateRegionalTableData(regions, actualData, budgetData) {
+            const fixedTableRows = document.querySelectorAll('#fixedTableBody tr');
+            const scrollableTableRows = document.querySelectorAll('#scrollableTableBody tr');
+
+            // Generate sample data for all columns
+            const loanCounts = [89, 142, 76, 125, 98];
+            const dccoCounts = [12, 18, 10, 15, 13];
+            const waroiCounts = [45, 72, 38, 63, 49];
+            const waroiNewCases = [8, 15, 6, 12, 9];
+            const sanctionedAmts = actualData.map(val => val + Math.random() * 50 + 20);
+            const disbursedAmts = actualData;
+            const undisbursedAmts = sanctionedAmts.map((val, i) => val - disbursedAmts[i]);
+            const exposureAmts = disbursedAmts;
+            const budgetedAums = budgetData;
+            const actualAums = actualData;
+            const varianceAums = actualAums.map((val, i) => ((val - budgetedAums[i]) / budgetedAums[i] * 100).toFixed(1));
+            const budgetedIncomes = budgetedAums.map(val => val * 0.05);
+            const actualIncomes = actualAums.map(val => val * 0.05);
+            const varianceIncomes = actualIncomes.map((val, i) => ((val - budgetedIncomes[i]) / budgetedIncomes[i] * 100).toFixed(1));
+            const pfIncomes = actualIncomes.map(val => val * 0.1);
+            const totalIncomes = actualIncomes.map((val, i) => val + pfIncomes[i]);
+
+            // Calculate PAN India totals
+            const panIndiaLoanCount = loanCounts.reduce((a, b) => a + b, 0);
+            const panIndiaDccoCount = dccoCounts.reduce((a, b) => a + b, 0);
+            const panIndiaWaroiCount = waroiCounts.reduce((a, b) => a + b, 0);
+            const panIndiaWaroiNewCases = waroiNewCases.reduce((a, b) => a + b, 0);
+            const panIndiaSanctionedAmt = sanctionedAmts.reduce((a, b) => a + b, 0);
+            const panIndiaDisbursedAmt = disbursedAmts.reduce((a, b) => a + b, 0);
+            const panIndiaUndisbursedAmt = undisbursedAmts.reduce((a, b) => a + b, 0);
+            const panIndiaExposureAmt = exposureAmts.reduce((a, b) => a + b, 0);
+            const panIndiaBudgetedAum = budgetedAums.reduce((a, b) => a + b, 0);
+            const panIndiaActualAum = actualAums.reduce((a, b) => a + b, 0);
+            const panIndiaVarianceAum = ((panIndiaActualAum - panIndiaBudgetedAum) / panIndiaBudgetedAum * 100).toFixed(1);
+            const panIndiaBudgetedIncome = budgetedIncomes.reduce((a, b) => a + b, 0);
+            const panIndiaActualIncome = actualIncomes.reduce((a, b) => a + b, 0);
+            const panIndiaVarianceIncome = ((panIndiaActualIncome - panIndiaBudgetedIncome) / panIndiaBudgetedIncome * 100).toFixed(1);
+            const panIndiaPfIncome = pfIncomes.reduce((a, b) => a + b, 0);
+            const panIndiaTotalIncome = totalIncomes.reduce((a, b) => a + b, 0);
+
+            // Update fixed table (Regions column)
+            fixedTableRows.forEach((row, index) => {
+                const cell = row.querySelector('td');
+                if (index < regions.length) {
+                    cell.textContent = regions[index];
+                    cell.className = 'font-medium';
+                    row.className = '';
+                } else if (index === regions.length) {
+                    cell.textContent = 'PAN India';
+                    cell.className = 'font-medium';
+                    row.className = 'summary-fixed-row';
+                }
+            });
+
+            // Update scrollable table (all other columns)
+            scrollableTableRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('td');
+
+                if (index < regions.length) {
+                    // Update region rows
+                    cells[0].textContent = loanCounts[index];
+                    cells[1].textContent = dccoCounts[index];
+                    cells[2].textContent = waroiCounts[index];
+                    cells[3].textContent = waroiNewCases[index];
+                    cells[4].textContent = sanctionedAmts[index].toFixed(2);
+                    cells[5].textContent = disbursedAmts[index].toFixed(2);
+                    cells[6].textContent = undisbursedAmts[index].toFixed(2);
+                    cells[7].textContent = exposureAmts[index].toFixed(2);
+                    cells[8].textContent = budgetedAums[index].toFixed(2);
+                    cells[9].textContent = actualAums[index].toFixed(2);
+
+                    // Update variance AUM with color
+                    cells[10].textContent = (varianceAums[index] >= 0 ? '+' : '') + varianceAums[index] + '%';
+                    cells[10].className = varianceAums[index] >= 0 ? 'text-green-600' : 'text-red-600';
+
+                    cells[11].textContent = budgetedIncomes[index].toFixed(2);
+                    cells[12].textContent = actualIncomes[index].toFixed(2);
+
+                    // Update variance income with color
+                    cells[13].textContent = (varianceIncomes[index] >= 0 ? '+' : '') + varianceIncomes[index] + '%';
+                    cells[13].className = varianceIncomes[index] >= 0 ? 'text-green-600' : 'text-red-600';
+
+                    cells[14].textContent = pfIncomes[index].toFixed(2);
+                    cells[15].textContent = totalIncomes[index].toFixed(2);
+
+                    row.className = '';
+                } else if (index === regions.length) {
+                    // Update PAN India row
+                    cells[0].textContent = panIndiaLoanCount;
+                    cells[1].textContent = panIndiaDccoCount;
+                    cells[2].textContent = panIndiaWaroiCount;
+                    cells[3].textContent = panIndiaWaroiNewCases;
+                    cells[4].textContent = panIndiaSanctionedAmt.toFixed(2);
+                    cells[5].textContent = panIndiaDisbursedAmt.toFixed(2);
+                    cells[6].textContent = panIndiaUndisbursedAmt.toFixed(2);
+                    cells[7].textContent = panIndiaExposureAmt.toFixed(2);
+                    cells[8].textContent = panIndiaBudgetedAum.toFixed(2);
+                    cells[9].textContent = panIndiaActualAum.toFixed(2);
+
+                    // Update variance AUM with color
+                    cells[10].textContent = (panIndiaVarianceAum >= 0 ? '+' : '') + panIndiaVarianceAum + '%';
+                    cells[10].className = panIndiaVarianceAum >= 0 ? 'text-green-600' : 'text-red-600';
+
+                    cells[11].textContent = panIndiaBudgetedIncome.toFixed(2);
+                    cells[12].textContent = panIndiaActualIncome.toFixed(2);
+
+                    // Update variance income with color
+                    cells[13].textContent = (panIndiaVarianceIncome >= 0 ? '+' : '') + panIndiaVarianceIncome + '%';
+                    cells[13].className = panIndiaVarianceIncome >= 0 ? 'text-green-600' : 'text-red-600';
+
+                    cells[14].textContent = panIndiaPfIncome.toFixed(2);
+                    cells[15].textContent = panIndiaTotalIncome.toFixed(2);
+
+                    row.className = 'summary-row';
+                }
+            });
+        }
+
+        // Update metrics
+        function updateMetrics(financialYear = '2023-24', month = '6') {
+            const metrics = [
+                { value: (Math.random() * 20 + 40).toFixed(1), suffix: ' Cr' },
+                { value: (Math.random() * 10 + 10).toFixed(1), suffix: ' Cr' },
+                { value: Math.floor(Math.random() * 2000 + 7000).toLocaleString(), suffix: '' },
+                { value: (Math.random() * 2 + 2).toFixed(2), suffix: '%' }
+            ];
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach((card, index) => {
+                const valueElement = card.querySelector('p');
+                valueElement.textContent = `₹${metrics[index].value}${metrics[index].suffix}`;
+            });
+        }
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+            notification.innerHTML = `<i class="fas fa-info-circle mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        // Get month name
+        function getMonthName(month) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[parseInt(month) - 1];
+        }
+    </script>
+</body>
+
+</html>
