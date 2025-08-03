@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBFC Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+            }
+        }
+
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .notification-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-item:hover {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+            border-left: 3px solid #3b82f6;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+                <h1 class="text-2xl font-bold text-gray-800">FinCorp Analytics</h1>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="relative">
+                    <i class="fas fa-bell text-gray-600 text-xl cursor-pointer hover:text-blue-600 transition"></i>
+                    <span class="notification-dot absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <img src="https://picsum.photos/seed/user1/40/40.jpg" alt="User" class="w-10 h-10 rounded-full">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">John Doe</p>
+                        <p class="text-xs text-gray-500">Branch Manager</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white h-screen shadow-lg">
+            <nav class="mt-8">
+                <div class="px-6 space-y-2">
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </a>
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Risk Management</span>
+                    </a>
+                    <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-green-600 font-semibold">+12.5%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm mb-1">Total Portfolio</h3>
+                    <p class="text-2xl font-bold text-gray-800">₹45.2 Cr</p>
+                </div>
+
+                <div class="metric-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-green-600 font-semibold">+8.3%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm mb-1">Disbursement</h3>
+                    <p class="text-2xl font-bold text-gray-800">₹12.8 Cr</p>
+                </div>
+
+                <div class="metric-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-users text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-green-600 font-semibold">+5.2%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm mb-1">Active Customers</h3>
+                    <p class="text-2xl font-bold text-gray-800">8,542</p>
+                </div>
+
+                <div class="metric-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-orange-100 p-3 rounded-lg">
+                            <i class="fas fa-percentage text-orange-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-red-600 font-semibold">-2.1%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm mb-1">NPA Ratio</h3>
+                    <p class="text-2xl font-bold text-gray-800">3.45%</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Loan Portfolio Chart -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Loan Portfolio Distribution</h2>
+                        <select
+                            class="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>Last 30 Days</option>
+                            <option>Last 90 Days</option>
+                            <option>Last Year</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Performance -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Monthly Performance</h2>
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities & Risk Assessment -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Recent Activities -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Recent Activities</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-green-100 p-2 rounded-full">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">Loan Approved</p>
+                                    <p class="text-sm text-gray-500">Rajesh Kumar - Personal Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">₹5,00,000</p>
+                                <p class="text-xs text-gray-500">2 mins ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-yellow-100 p-2 rounded-full">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">Payment Due</p>
+                                    <p class="text-sm text-gray-500">Priya Singh - Business Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">₹45,000</p>
+                                <p class="text-xs text-gray-500">1 hour ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-blue-100 p-2 rounded-full">
+                                    <i class="fas fa-user-plus text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">New Customer</p>
+                                    <p class="text-sm text-gray-500">Amit Patel - Registered</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">-</p>
+                                <p class="text-xs text-gray-500">3 hours ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-red-100 p-2 rounded-full">
+                                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">Overdue Alert</p>
+                                    <p class="text-sm text-gray-500">Sunil Mehta - Home Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-800">₹78,000</p>
+                                <p class="text-xs text-gray-500">5 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Risk Assessment</h2>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-semibold text-green-800">Low Risk</span>
+                                <span class="text-2xl font-bold text-green-600">72%</span>
+                            </div>
+                            <div class="w-full bg-green-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 72%"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-semibold text-yellow-800">Medium Risk</span>
+                                <span class="text-2xl font-bold text-yellow-600">21%</span>
+                            </div>
+                            <div class="w-full bg-yellow-200 rounded-full h-2">
+                                <div class="bg-yellow-600 h-2 rounded-full" style="width: 21%"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-semibold text-red-800">High Risk</span>
+                                <span class="text-2xl font-bold text-red-600">7%</span>
+                            </div>
+                            <div class="w-full bg-red-200 rounded-full h-2">
+                                <div class="bg-red-600 h-2 rounded-full" style="width: 7%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        class="w-full mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Download Report</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mt-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-plus-circle text-2xl"></i>
+                        <span class="text-sm">New Loan</span>
+                    </button>
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-user-check text-2xl"></i>
+                        <span class="text-sm">KYC Verify</span>
+                    </button>
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-file-invoice text-2xl"></i>
+                        <span class="text-sm">Generate Report</span>
+                    </button>
+                    <button
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-phone-alt text-2xl"></i>
+                        <span class="text-sm">Contact Support</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function () {
+            // Portfolio Distribution Chart
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            new Chart(portfolioCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Personal Loan', 'Home Loan', 'Business Loan', 'Vehicle Loan', 'Education Loan'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Monthly Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Disbursement',
+                        data: [8.5, 9.2, 10.1, 11.3, 12.0, 12.8],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Collection',
+                        data: [7.8, 8.5, 9.2, 10.5, 11.2, 11.9],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '₹' + value + ' Cr';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Simulate real-time updates
+            setInterval(() => {
+                // Update metrics with random variations
+                const portfolioValue = document.querySelector('.metric-card p');
+                const currentValue = parseFloat(portfolioValue.textContent.replace('₹', '').replace(' Cr', ''));
+                const newValue = (currentValue + (Math.random() - 0.5) * 0.1).toFixed(1);
+                portfolioValue.textContent = `₹${newValue} Cr`;
+            }, 5000);
+
+            // Add click handlers for interactive elements
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Remove active class from all items
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('bg-blue-50', 'text-blue-600'));
+                    // Add active class to clicked item
+                    this.classList.add('bg-blue-50', 'text-blue-600');
+                });
+            });
+
+            // Quick action buttons
+            document.querySelectorAll('.bg-gradient-to-r button').forEach(button => {
+                button.addEventListener('click', function () {
+                    // Create a temporary notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300';
+                    notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Action initiated successfully!`;
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(0)';
+                    }, 100);
+
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(100%)';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

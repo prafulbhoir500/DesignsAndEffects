@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Partner Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #06ffa5;
+            --warning: #ffbe0b;
+            --danger: #fb5607;
+            --info: #3a86ff;
+            --muted: #6c757d;
+            --border: #dee2e6;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background-color: var(--dark);
+            color: white;
+            padding: 20px 0;
+            transition: var(--transition);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--accent);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: var(--transition);
+            gap: 10px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            position: relative;
+            font-size: 1.2rem;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow);
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            color: var(--muted);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        /* Partner Tabs */
+        .partner-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        /* Partner Filters */
+        .partner-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--light);
+        }
+
+        /* Partner List */
+        .partner-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .partner-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .partner-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px var(--shadow);
+        }
+
+        .partner-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .partner-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .partner-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: rgba(6, 255, 165, 0.1);
+            color: var(--success);
+        }
+
+        .status-inactive {
+            background-color: rgba(251, 86, 7, 0.1);
+            color: var(--danger);
+        }
+
+        .status-pending {
+            background-color: rgba(255, 190, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .partner-body {
+            padding: 15px;
+        }
+
+        .partner-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .info-label {
+            width: 100px;
+            color: var(--muted);
+        }
+
+        .info-value {
+            flex: 1;
+        }
+
+        .partner-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background-color: var(--light);
+            color: var(--dark);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .partner-actions {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            background-color: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+
+        /* Partner Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--muted);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+
+        .document-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .document-item:hover {
+            background-color: var(--light);
+        }
+
+        .document-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            background-color: var(--light);
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .document-meta {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .communication-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .communication-item {
+            display: flex;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .communication-item:last-child {
+            border-bottom: none;
+        }
+
+        .comm-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .comm-content {
+            flex: 1;
+        }
+
+        .comm-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .comm-author {
+            font-weight: 500;
+        }
+
+        .comm-date {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .comm-message {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .partner-list {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .partner-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-buttons {
+                justify-content: space-between;
+            }
+
+            .partner-list {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <span>ERP Portal</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Vendors</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Customers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Invoices</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        <span>Orders</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Partner Portal</h1>
+                </div>
+                <div class="user-profile">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </div>
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="user-avatar">
+                    <div>
+                        <div style="font-weight: 500;">John Doe</div>
+                        <div style="font-size: 0.8rem; color: var(--muted);">Administrator</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Cards -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Total Vendors</div>
+                        <div class="card-icon" style="background-color: rgba(67, 97, 238, 0.1); color: var(--primary);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">248</div>
+                    <div class="card-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12% from last month</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Total Customers</div>
+                        <div class="card-icon" style="background-color: rgba(6, 255, 165, 0.1); color: var(--success);">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">1,426</div>
+                    <div class="card-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8% from last month</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Pending Approvals</div>
+                        <div class="card-icon"
+                            style="background-color: rgba(255, 190, 11, 0.1); color: var(--warning);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">17</div>
+                    <div class="card-change negative">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>3% from last week</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Active Contracts</div>
+                        <div class="card-icon" style="background-color: rgba(58, 134, 255, 0.1); color: var(--info);">
+                            <i class="fas fa-file-contract"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">892</div>
+                    <div class="card-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>5% from last month</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partner Tabs -->
+            <div class="partner-tabs">
+                <div class="tab active">Vendors</div>
+                <div class="tab">Customers</div>
+            </div>
+
+            <!-- Partner Filters -->
+            <div class="partner-filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search partners...">
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-filter"></i>
+                        Filters
+                    </button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Partner
+                    </button>
+                </div>
+            </div>
+
+            <!-- Partner List -->
+            <div class="partner-list">
+                <!-- Vendor Card 1 -->
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div class="partner-name">TechSource Inc.</div>
+                        <div class="partner-status status-active">Active</div>
+                    </div>
+                    <div class="partner-body">
+                        <div class="partner-info">
+                            <div class="info-row">
+                                <div class="info-label">Contact:</div>
+                                <div class="info-value">Sarah Johnson</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">sarah@techsource.com</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">(555) 123-4567</div>
+                            </div>
+                        </div>
+                        <div class="partner-tags">
+                            <div class="tag">Electronics</div>
+                            <div class="tag">Preferred</div>
+                            <div class="tag">5 Years</div>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="openPartnerModal()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Card 2 -->
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div class="partner-name">Global Supplies Ltd.</div>
+                        <div class="partner-status status-active">Active</div>
+                    </div>
+                    <div class="partner-body">
+                        <div class="partner-info">
+                            <div class="info-row">
+                                <div class="info-label">Contact:</div>
+                                <div class="info-value">Michael Chen</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">m.chen@globalsupplies.com</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">(555) 987-6543</div>
+                            </div>
+                        </div>
+                        <div class="partner-tags">
+                            <div class="tag">Raw Materials</div>
+                            <div class="tag">International</div>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="openPartnerModal()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Card 3 -->
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div class="partner-name">Office Essentials Co.</div>
+                        <div class="partner-status status-pending">Pending</div>
+                    </div>
+                    <div class="partner-body">
+                        <div class="partner-info">
+                            <div class="info-row">
+                                <div class="info-label">Contact:</div>
+                                <div class="info-value">Jennifer Williams</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">j.williams@officeessentials.com</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">(555) 456-7890</div>
+                            </div>
+                        </div>
+                        <div class="partner-tags">
+                            <div class="tag">Office Supplies</div>
+                            <div class="tag">New Vendor</div>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="openPartnerModal()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Card 1 -->
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div class="partner-name">Retail Solutions Inc.</div>
+                        <div class="partner-status status-active">Active</div>
+                    </div>
+                    <div class="partner-body">
+                        <div class="partner-info">
+                            <div class="info-row">
+                                <div class="info-label">Contact:</div>
+                                <div class="info-value">Robert Thompson</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">r.thompson@retailsolutions.com</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">(555) 234-5678</div>
+                            </div>
+                        </div>
+                        <div class="partner-tags">
+                            <div class="tag">Wholesale</div>
+                            <div class="tag">Premium</div>
+                            <div class="tag">10+ Years</div>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="openPartnerModal()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Card 2 -->
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div class="partner-name">Metro Stores LLC</div>
+                        <div class="partner-status status-active">Active</div>
+                    </div>
+                    <div class="partner-body">
+                        <div class="partner-info">
+                            <div class="info-row">
+                                <div class="info-label">Contact:</div>
+                                <div class="info-value">Amanda Davis</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">a.davis@metrostores.com</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">(555) 345-6789</div>
+                            </div>
+                        </div>
+                        <div class="partner-tags">
+                            <div class="tag">Retail</div>
+                            <div class="tag">National</div>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="openPartnerModal()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Card 3 -->
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div class="partner-name">City Distributors</div>
+                        <div class="partner-status status-inactive">Inactive</div>
+                    </div>
+                    <div class="partner-body">
+                        <div class="partner-info">
+                            <div class="info-row">
+                                <div class="info-label">Contact:</div>
+                                <div class="info-value">David Miller</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">d.miller@citydistributors.com</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">(555) 567-8901</div>
+                            </div>
+                        </div>
+                        <div class="partner-tags">
+                            <div class="tag">Distribution</div>
+                            <div class="tag">On Hold</div>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="openPartnerModal()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button class="action-btn">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Partner Detail Modal -->
+    <div class="modal" id="partnerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Partner Details</h2>
+                <button class="close-btn" onclick="closePartnerModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Partner Overview -->
+                <div class="detail-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Partner Overview
+                    </h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Partner Name</div>
+                            <div class="detail-value">TechSource Inc.</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Partner Type</div>
+                            <div class="detail-value">Vendor</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <span class="partner-status status-active">Active</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Since</div>
+                            <div class="detail-value">Jan 15, 2018</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Category</div>
+                            <div class="detail-value">Electronics</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Rating</div>
+                            <div class="detail-value">
+                                <i class="fas fa-star" style="color: var(--warning);"></i>
+                                <i class="fas fa-star" style="color: var(--warning);"></i>
+                                <i class="fas fa-star" style="color: var(--warning);"></i>
+                                <i class="fas fa-star" style="color: var(--warning);"></i>
+                                <i class="fas fa-star-half-alt" style="color: var(--warning);"></i>
+                                4.5
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="detail-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-address-book"></i>
+                        Contact Information
+                    </h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Primary Contact</div>
+                            <div class="detail-value">Sarah Johnson</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value">sarah@techsource.com</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">(555) 123-4567</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Mobile</div>
+                            <div class="detail-value">(555) 987-6543</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Address</div>
+                            <div class="detail-value">123 Tech Park, San Francisco, CA 94107</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Website</div>
+                            <div class="detail-value">www.techsource.com</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Information -->
+                <div class="detail-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-coins"></i>
+                        Financial Information
+                    </h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Payment Terms</div>
+                            <div class="detail-value">Net 30</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Credit Limit</div>
+                            <div class="detail-value">$50,000</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Currency</div>
+                            <div class="detail-value">USD</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tax ID</div>
+                            <div class="detail-value">12-3456789</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="detail-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-file-alt"></i>
+                        Documents
+                    </h3>
+                    <div class="document-list">
+                        <div class="document-item">
+                            <div class="document-icon"
+                                style="background-color: rgba(67, 97, 238, 0.1); color: var(--primary);">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-name">Master Service Agreement</div>
+                                <div class="document-meta">PDF • 2.4 MB • Jan 15, 2023</div>
+                            </div>
+                            <div class="document-actions">
+                                <button class="action-btn">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon"
+                                style="background-color: rgba(6, 255, 165, 0.1); color: var(--success);">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-name">W-9 Form</div>
+                                <div class="document-meta">PDF • 1.1 MB • Feb 3, 2023</div>
+                            </div>
+                            <div class="document-actions">
+                                <button class="action-btn">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon"
+                                style="background-color: rgba(255, 190, 11, 0.1); color: var(--warning);">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-name">Insurance Certificate</div>
+                                <div class="document-meta">PDF • 3.7 MB • Mar 12, 2023</div>
+                            </div>
+                            <div class="document-actions">
+                                <button class="action-btn">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communication History -->
+                <div class="detail-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-comments"></i>
+                        Communication History
+                    </h3>
+                    <div class="communication-list">
+                        <div class="communication-item">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="comm-avatar">
+                            <div class="comm-content">
+                                <div class="comm-header">
+                                    <div class="comm-author">You</div>
+                                    <div class="comm-date">Today, 10:30 AM</div>
+                                </div>
+                                <div class="comm-message">Hi Sarah, could you please send me the updated pricing for the
+                                    new product line?</div>
+                            </div>
+                        </div>
+                        <div class="communication-item">
+                            <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="User" class="comm-avatar">
+                            <div class="comm-content">
+                                <div class="comm-header">
+                                    <div class="comm-author">Sarah Johnson</div>
+                                    <div class="comm-date">Today, 11:15 AM</div>
+                                </div>
+                                <div class="comm-message">Sure, I'll email you the updated catalog by end of day today.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="communication-item">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="comm-avatar">
+                            <div class="comm-content">
+                                <div class="comm-header">
+                                    <div class="comm-author">You</div>
+                                    <div class="comm-date">Yesterday, 3:45 PM</div>
+                                </div>
+                                <div class="comm-message">Thanks for the quick delivery on last week's order. Everything
+                                    looks good.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar on mobile
+        document.getElementById('menuToggle').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // In a real app, this would filter the partner list
+                // For demo purposes, we'll just log the action
+                console.log('Switched to tab:', this.textContent);
+            });
+        });
+
+        // Modal functions
+        function openPartnerModal() {
+            document.getElementById('partnerModal').style.display = 'flex';
+        }
+
+        function closePartnerModal() {
+            document.getElementById('partnerModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('partnerModal');
+            if (event.target === modal) {
+                closePartnerModal();
+            }
+        });
+
+        // Simulate dynamic data loading
+        document.addEventListener('DOMContentLoaded', function () {
+            // In a real application, this would fetch data from an API
+            console.log('Partner portal loaded successfully');
+        });
+    </script>
+</body>
+
+</html>

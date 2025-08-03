@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBFC Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+        }
+        
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .notification-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item:hover {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Custom styles for fixed sidebar and responsive layout */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 40;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .main-content {
+            margin-left: 0;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 16rem; /* 64 * 4 = 256px (w-64) */
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 30;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile chart adjustments */
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* Upload card styles */
+        .upload-card {
+            transition: all 0.3s ease;
+        }
+
+        .upload-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal styles */
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Progress bar animation */
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+
+        /* File drag area */
+        .file-drop-area {
+            transition: all 0.3s ease;
+        }
+
+        .file-drop-area.dragover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        /* Table styles */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+        <div class="px-4 lg:px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+                <h1 class="text-xl lg:text-2xl font-bold text-gray-800">FinCorp Analytics</h1>
+            </div>
+            <div class="flex items-center space-x-4 lg:space-x-6">
+                <div class="relative">
+                    <i class="fas fa-bell text-gray-600 text-xl cursor-pointer hover:text-blue-600 transition"></i>
+                    <span class="notification-dot absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <img src="https://picsum.photos/seed/user1/40/40.jpg" alt="User" class="w-10 h-10 rounded-full">
+                    <div class="hidden sm:block">
+                        <p class="text-sm font-semibold text-gray-800">John Doe</p>
+                        <p class="text-xs text-gray-500">Branch Manager</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 bg-white shadow-lg">
+        <nav class="mt-16 lg:mt-8">
+            <div class="px-6 space-y-2">
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg" data-page="loans">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Loans</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg" data-page="customers">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg" data-page="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg" data-page="risk">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Risk Management</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg bg-blue-50 text-blue-600" data-page="uploads">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Work Uploads</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content pt-20 lg:pt-24 px-4 lg:px-6 pb-8">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="hidden">
+            <!-- Date Controls and Refresh -->
+            <div class="bg-white rounded-xl shadow-md p-4 lg:p-6 mb-6">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <div class="w-full sm:w-auto">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Financial Year</label>
+                            <select id="financialYear" class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="2022-23">2022-23</option>
+                                <option value="2023-24" selected>2023-24</option>
+                                <option value="2024-25">2024-25</option>
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-auto">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                            <select id="month" class="w-full sm:w-40 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6" selected>June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="refreshBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition flex items-center space-x-2 self-end lg:self-auto">
+                        <i id="refreshIcon" class="fas fa-sync-alt"></i>
+                        <span>Refresh Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-green-600 font-semibold">+12.5%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">Total Portfolio</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">₹45.2 Cr</p>
+                </div>
+
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-green-600 font-semibold">+8.3%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">Disbursement</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">₹12.8 Cr</p>
+                </div>
+
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-users text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-green-600 font-semibold">+5.2%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">Active Customers</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">8,542</p>
+                </div>
+
+                <div class="metric-card bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-orange-100 p-3 rounded-lg">
+                            <i class="fas fa-percentage text-orange-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs lg:text-sm text-red-600 font-semibold">-2.1%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-xs lg:text-sm mb-1">NPA Ratio</h3>
+                    <p class="text-xl lg:text-2xl font-bold text-gray-800">3.45%</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <!-- Loan Portfolio Chart -->
+                <div class="bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+                        <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-2 sm:mb-0">Loan Portfolio Distribution</h2>
+                        <select class="text-xs lg:text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>Last 30 Days</option>
+                            <option>Last 90 Days</option>
+                            <option>Last Year</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Performance -->
+                <div class="bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base lg:text-lg font-semibold text-gray-800">Monthly Performance</h2>
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities & Risk Assessment -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                <!-- Recent Activities -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Recent Activities</h2>
+                    <div class="space-y-3 lg:space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-green-100 p-2 rounded-full">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">Loan Approved</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Rajesh Kumar - Personal Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">₹5,00,000</p>
+                                <p class="text-xs text-gray-500">2 mins ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-yellow-100 p-2 rounded-full">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">Payment Due</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Priya Singh - Business Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">₹45,000</p>
+                                <p class="text-xs text-gray-500">1 hour ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-blue-100 p-2 rounded-full">
+                                    <i class="fas fa-user-plus text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">New Customer</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Amit Patel - Registered</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">-</p>
+                                <p class="text-xs text-gray-500">3 hours ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition">
+                            <div class="flex items-center space-x-4 mb-2 sm:mb-0">
+                                <div class="bg-red-100 p-2 rounded-full">
+                                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800 text-sm lg:text-base">Overdue Alert</p>
+                                    <p class="text-xs lg:text-sm text-gray-500">Sunil Mehta - Home Loan</p>
+                                </div>
+                            </div>
+                            <div class="text-right sm:text-left">
+                                <p class="font-semibold text-gray-800 text-sm lg:text-base">₹78,000</p>
+                                <p class="text-xs text-gray-500">5 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="bg-white rounded-xl shadow-md p-4 lg:p-6">
+                    <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Risk Assessment</h2>
+                    <div class="space-y-3 lg:space-y-4">
+                        <div class="p-3 lg:p-4 bg-green-50 rounded-lg border border-green-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs lg:text-sm font-semibold text-green-800">Low Risk</span>
+                                <span class="text-xl lg:text-2xl font-bold text-green-600">72%</span>
+                            </div>
+                            <div class="w-full bg-green-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 72%"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 lg:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs lg:text-sm font-semibold text-yellow-800">Medium Risk</span>
+                                <span class="text-xl lg:text-2xl font-bold text-yellow-600">21%</span>
+                            </div>
+                            <div class="w-full bg-yellow-200 rounded-full h-2">
+                                <div class="bg-yellow-600 h-2 rounded-full" style="width: 21%"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 lg:p-4 bg-red-50 rounded-lg border border-red-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs lg:text-sm font-semibold text-red-800">High Risk</span>
+                                <span class="text-xl lg:text-2xl font-bold text-red-600">7%</span>
+                            </div>
+                            <div class="w-full bg-red-200 rounded-full h-2">
+                                <div class="bg-red-600 h-2 rounded-full" style="width: 7%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="w-full mt-4 lg:mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center space-x-2 text-sm">
+                        <i class="fas fa-download"></i>
+                        <span>Download Report</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mt-6 lg:mt-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-4 lg:p-6 text-white">
+                <h2 class="text-lg lg:text-xl font-semibold mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+                    <button class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-plus-circle text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">New Loan</span>
+                    </button>
+                    <button class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-user-check text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">KYC Verify</span>
+                    </button>
+                    <button class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-file-invoice text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">Generate Report</span>
+                    </button>
+                    <button class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-3 lg:p-4 transition flex flex-col items-center space-y-2">
+                        <i class="fas fa-phone-alt text-xl lg:text-2xl"></i>
+                        <span class="text-xs lg:text-sm">Contact Support</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Uploads Page -->
+        <div id="uploads-page">
+            <div class="bg-white rounded-xl shadow-md p-4 lg:p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="backToDashboard" class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <h1 class="text-xl lg:text-2xl font-bold text-gray-800">Work Uploads</h1>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>
+                        Last updated: <span id="lastUpdated">Today, 10:30 AM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Write Offs Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-red-100 p-3 rounded-lg">
+                            <i class="fas fa-file-times text-red-600 text-xl"></i>
+                        </div>
+                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">System Data</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Write Offs</h3>
+                    <p class="text-gray-600 text-sm mb-4">View and manage loan write-off data from the system</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Last updated: 2 days ago</span>
+                        <button class="view-system-data bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1" data-type="Write Offs">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Suit Filed Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-gavel text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">System Data</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Suit Filed</h3>
+                    <p class="text-gray-600 text-sm mb-4">Access legal case filings and court proceedings</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Last updated: 1 week ago</span>
+                        <button class="view-system-data bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center space-x-1" data-type="Suit Filed">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CE-Upload Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-file-upload text-yellow-600 text-xl"></i>
+                        </div>
+                        <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">User Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">CE-Upload</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload customer engagement and communication data</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">3 files uploaded</span>
+                        <div class="flex space-x-2">
+                            <button class="view-uploads bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-type="CE-Upload">
+                                <i class="fas fa-folder-open"></i>
+                                <span>View</span>
+                            </button>
+                            <button class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-upload-type="CE-Upload">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Upload Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-project-diagram text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">User Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Project Upload</h3>
+                    <p class="text-gray-600 text-sm mb-4">Submit project proposals and related documents</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">5 files uploaded</span>
+                        <div class="flex space-x-2">
+                            <button class="view-uploads bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-type="Project Upload">
+                                <i class="fas fa-folder-open"></i>
+                                <span>View</span>
+                            </button>
+                            <button class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-upload-type="Project Upload">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-calculator text-green-600 text-xl"></i>
+                        </div>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">User Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Budget</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload departmental and project budget files</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">2 files uploaded</span>
+                        <div class="flex space-x-2">
+                            <button class="view-uploads bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-type="Budget">
+                                <i class="fas fa-folder-open"></i>
+                                <span>View</span>
+                            </button>
+                            <button class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-upload-type="Budget">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Card -->
+                <div class="upload-card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-indigo-100 p-3 rounded-lg">
+                            <i class="fas fa-file-alt text-indigo-600 text-xl"></i>
+                        </div>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">User Upload</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Reports</h3>
+                    <p class="text-gray-600 text-sm mb-4">Upload monthly and quarterly reports</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">7 files uploaded</span>
+                        <div class="flex space-x-2">
+                            <button class="view-uploads bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-type="Reports">
+                                <i class="fas fa-folder-open"></i>
+                                <span>View</span>
+                            </button>
+                            <button class="upload-button bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition flex items-center space-x-1" data-upload-type="Reports">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Upload <span id="uploadType">File</span></h3>
+                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="file-drop-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer" id="fileDropArea">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 mb-2">Drag & drop your file here</p>
+                        <p class="text-gray-500 text-sm mb-4">or</p>
+                        <label for="fileInput" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition cursor-pointer inline-block">
+                            Browse Files
+                        </label>
+                        <input type="file" id="fileInput" class="hidden">
+                        <p class="text-gray-500 text-xs mt-4">Supported formats: PDF, DOC, XLSX (Max 10MB)</p>
+                    </div>
+                    
+                    <div id="fileInfo" class="mt-4 hidden">
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-file text-gray-500"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800" id="fileName">filename.pdf</p>
+                                    <p class="text-xs text-gray-500" id="fileSize">2.4 MB</p>
+                                </div>
+                            </div>
+                            <button id="removeFile" class="text-gray-500 hover:text-red-500">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="uploadProgress" class="mb-4 hidden">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-gray-700">Uploading...</span>
+                        <span class="text-sm font-medium text-gray-700" id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="progress-bar bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelUpload" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                        Cancel
+                    </button>
+                    <button id="confirmUpload" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50" disabled>
+                        Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View System Data Modal -->
+    <div id="viewSystemDataModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800"><span id="systemDataType">Write Offs</span> Data</h3>
+                    <button id="closeSystemDataModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3">Loan ID</th>
+                                <th class="px-6 py-3">Customer Name</th>
+                                <th class="px-6 py-3">Amount</th>
+                                <th class="px-6 py-3">Write Off Date</th>
+                                <th class="px-6 py-3">Reason</th>
+                                <th class="px-6 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="systemDataTableBody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="flex justify-end mt-4">
+                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Export Data</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Uploads Modal -->
+    <div id="viewUploadsModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800"><span id="uploadsType">CE-Upload</span> Files</h3>
+                    <button id="closeUploadsModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3">File Name</th>
+                                <th class="px-6 py-3">Size</th>
+                                <th class="px-6 py-3">Uploaded By</th>
+                                <th class="px-6 py-3">Date</th>
+                                <th class="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uploadsTableBody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="flex justify-between items-center mt-4">
+                    <div class="text-sm text-gray-500">
+                        <span id="fileCount">0</span> files
+                    </div>
+                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Download All</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Page navigation
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const uploadsPage = document.getElementById('uploads-page');
+        const backToDashboard = document.getElementById('backToDashboard');
+
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                
+                // Remove active class from all items
+                sidebarItems.forEach(i => i.classList.remove('bg-blue-50', 'text-blue-600'));
+                // Add active class to clicked item
+                this.classList.add('bg-blue-50', 'text-blue-600');
+                
+                // Hide all pages
+                dashboardPage.classList.add('hidden');
+                uploadsPage.classList.add('hidden');
+                
+                // Show selected page
+                if (page === 'uploads') {
+                    uploadsPage.classList.remove('hidden');
+                    updateLastUpdated();
+                } else {
+                    dashboardPage.classList.remove('hidden');
+                }
+                
+                // Close mobile menu after selection
+                if (window.innerWidth < 1024) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        backToDashboard.addEventListener('click', () => {
+            uploadsPage.classList.add('hidden');
+            dashboardPage.classList.remove('hidden');
+            
+            // Update active sidebar item
+            sidebarItems.forEach(i => i.classList.remove('bg-blue-50', 'text-blue-600'));
+            document.querySelector('[data-page="dashboard"]').classList.add('bg-blue-50', 'text-blue-600');
+        });
+
+        // Update last updated time
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lastUpdated').textContent = `Today, ${timeString}`;
+        }
+
+        // Upload modal functionality
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadButtons = document.querySelectorAll('.upload-button');
+        const closeModal = document.getElementById('closeModal');
+        const cancelUpload = document.getElementById('cancelUpload');
+        const confirmUpload = document.getElementById('confirmUpload');
+        const fileDropArea = document.getElementById('fileDropArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const uploadType = document.getElementById('uploadType');
+
+        let selectedFile = null;
+
+        uploadButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.getAttribute('data-upload-type');
+                uploadType.textContent = type;
+                uploadModal.classList.remove('hidden');
+                resetModal();
+            });
+        });
+
+        closeModal.addEventListener('click', () => {
+            uploadModal.classList.add('hidden');
+        });
+
+        cancelUpload.addEventListener('click', () => {
+            uploadModal.classList.add('hidden');
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+
+        // Drag and drop functionality
+        fileDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropArea.classList.add('dragover');
+        });
+
+        fileDropArea.addEventListener('dragleave', () => {
+            fileDropArea.classList.remove('dragover');
+        });
+
+        fileDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                handleFileSelection(e.dataTransfer.files[0]);
+            }
+        });
+
+        function handleFileSelection(file) {
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.remove('hidden');
+            confirmUpload.disabled = false;
+        }
+
+        removeFile.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            confirmUpload.disabled = true;
+        });
+
+        confirmUpload.addEventListener('click', () => {
+            if (!selectedFile) return;
+            
+            // Show progress
+            uploadProgress.classList.remove('hidden');
+            confirmUpload.disabled = true;
+            
+            // Simulate upload progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                progressPercent.textContent = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // Show success message
+                    setTimeout(() => {
+                        uploadModal.classList.add('hidden');
+                        showNotification(`File uploaded successfully to ${uploadType.textContent}`);
+                        resetModal();
+                        updateLastUpdated();
+                        updateFileCount(uploadType.textContent);
+                    }, 500);
+                }
+            }, 200);
+        });
+
+        function resetModal() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            uploadProgress.classList.add('hidden');
+            confirmUpload.disabled = true;
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // View System Data Modal
+        const viewSystemDataModal = document.getElementById('viewSystemDataModal');
+        const closeSystemDataModal = document.getElementById('closeSystemDataModal');
+        const viewSystemDataButtons = document.querySelectorAll('.view-system-data');
+        const systemDataType = document.getElementById('systemDataType');
+        const systemDataTableBody = document.getElementById('systemDataTableBody');
+
+        viewSystemDataButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.getAttribute('data-type');
+                systemDataType.textContent = type;
+                viewSystemDataModal.classList.remove('hidden');
+                populateSystemDataTable(type);
+            });
+        });
+
+        closeSystemDataModal.addEventListener('click', () => {
+            viewSystemDataModal.classList.add('hidden');
+        });
+
+        function populateSystemDataTable(type) {
+            systemDataTableBody.innerHTML = '';
+            
+            // Sample data based on type
+            const data = type === 'Write Offs' ? [
+                { id: 'WO-001', customer: 'Rajesh Kumar', amount: '₹2,50,000', date: '2024-05-15', reason: 'Default', status: 'Completed' },
+                { id: 'WO-002', customer: 'Priya Singh', amount: '₹1,80,000', date: '2024-05-10', reason: 'Bankruptcy', status: 'Completed' },
+                { id: 'WO-003', customer: 'Amit Patel', amount: '₹3,20,000', date: '2024-05-05', reason: 'Death', status: 'Completed' },
+                { id: 'WO-004', customer: 'Sunita Sharma', amount: '₹1,50,000', date: '2024-04-28', reason: 'Default', status: 'In Progress' },
+                { id: 'WO-005', customer: 'Vikram Mehta', amount: '₹2,80,000', date: '2024-04-20', reason: 'Default', status: 'Completed' }
+            ] : [
+                { id: 'SF-001', customer: 'Mahesh Gupta', amount: '₹5,00,000', date: '2024-05-12', reason: 'Non-Payment', status: 'Filed' },
+                { id: 'SF-002', customer: 'Anita Desai', amount: '₹3,50,000', date: '2024-05-08', reason: 'Fraud', status: 'In Court' },
+                { id: 'SF-003', customer: 'Rahul Verma', amount: '₹4,20,000', date: '2024-05-01', reason: 'Default', status: 'Won' },
+                { id: 'SF-004', customer: 'Kavita Nair', amount: '₹2,90,000', date: '2024-04-25', reason: 'Non-Payment', status: 'Filed' },
+                { id: 'SF-005', customer: 'Sanjay Joshi', amount: '₹6,10,000', date: '2024-04-18', reason: 'Default', status: 'In Court' }
+            ];
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${row.id}</td>
+                    <td class="px-6 py-4">${row.customer}</td>
+                    <td class="px-6 py-4">${row.amount}</td>
+                    <td class="px-6 py-4">${row.date}</td>
+                    <td class="px-6 py-4">${row.reason}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            row.status === 'Completed' || row.status === 'Won' ? 'bg-green-100 text-green-800' :
+                            row.status === 'In Progress' || row.status === 'In Court' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-blue-100 text-blue-800'
+                        }">${row.status}</span>
+                    </td>
+                `;
+                systemDataTableBody.appendChild(tr);
+            });
+        }
+
+        // View Uploads Modal
+        const viewUploadsModal = document.getElementById('viewUploadsModal');
+        const closeUploadsModal = document.getElementById('closeUploadsModal');
+        const viewUploadsButtons = document.querySelectorAll('.view-uploads');
+        const uploadsType = document.getElementById('uploadsType');
+        const uploadsTableBody = document.getElementById('uploadsTableBody');
+        const fileCount = document.getElementById('fileCount');
+
+        viewUploadsButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.getAttribute('data-type');
+                uploadsType.textContent = type;
+                viewUploadsModal.classList.remove('hidden');
+                populateUploadsTable(type);
+            });
+        });
+
+        closeUploadsModal.addEventListener('click', () => {
+            viewUploadsModal.classList.add('hidden');
+        });
+
+        function populateUploadsTable(type) {
+            uploadsTableBody.innerHTML = '';
+            
+            // Sample files data
+            const files = {
+                'CE-Upload': [
+                    { name: 'Customer_Engagement_Q1_2024.pdf', size: '2.4 MB', user: 'John Doe', date: '2024-05-15' },
+                    { name: 'Communication_Report_April.xlsx', size: '1.8 MB', user: 'Priya Singh', date: '2024-05-10' },
+                    { name: 'CE_Meeting_Notes.docx', size: '450 KB', user: 'Amit Patel', date: '2024-05-05' }
+                ],
+                'Project Upload': [
+                    { name: 'Project_Proposal_New_Branch.pdf', size: '3.2 MB', user: 'Rahul Verma', date: '2024-05-14' },
+                    { name: 'Budget_Allocation_2024.xlsx', size: '2.1 MB', user: 'Kavita Nair', date: '2024-05-08' },
+                    { name: 'Project_Timeline.docx', size: '680 KB', user: 'Sanjay Joshi', date: '2024-05-03' },
+                    { name: 'Risk_Assessment.pdf', size: '1.5 MB', user: 'Anita Desai', date: '2024-04-28' },
+                    { name: 'Stakeholder_Report.xlsx', size: '980 KB', user: 'Mahesh Gupta', date: '2024-04-22' }
+                ],
+                'Budget': [
+                    { name: 'Annual_Budget_2024-25.xlsx', size: '4.5 MB', user: 'John Doe', date: '2024-05-12' },
+                    { name: 'Q2_Budget_Allocation.pdf', size: '2.8 MB', user: 'Priya Singh', date: '2024-05-07' }
+                ],
+                'Reports': [
+                    { name: 'Monthly_Report_May_2024.pdf', size: '3.1 MB', user: 'Amit Patel', date: '2024-05-16' },
+                    { name: 'Quarterly_Performance_Q1.xlsx', size: '2.5 MB', user: 'Rahul Verma', date: '2024-05-11' },
+                    { name: 'Audit_Report_2024.pdf', size: '5.2 MB', user: 'Kavita Nair', date: '2024-05-06' },
+                    { name: 'Compliance_Report.docx', size: '1.2 MB', user: 'Sanjay Joshi', date: '2024-05-01' },
+                    { name: 'Risk_Analysis_Q1.xlsx', size: '1.8 MB', user: 'Anita Desai', date: '2024-04-26' },
+                    { name: 'Portfolio_Summary.pdf', size: '2.9 MB', user: 'Mahesh Gupta', date: '2024-04-21' },
+                    { name: 'Customer_Satisfaction.docx', size: '750 KB', user: 'John Doe', date: '2024-04-16' }
+                ]
+            };
+            
+            const typeFiles = files[type] || [];
+            fileCount.textContent = typeFiles.length;
+            
+            typeFiles.forEach(file => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${file.name}</td>
+                    <td class="px-6 py-4">${file.size}</td>
+                    <td class="px-6 py-4">${file.user}</td>
+                    <td class="px-6 py-4">${file.date}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-800" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="text-gray-600 hover:text-gray-800" title="Preview">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-800" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                uploadsTableBody.appendChild(tr);
+            });
+        }
+
+        function updateFileCount(type) {
+            // Update file count on the card
+            const cards = document.querySelectorAll('.upload-card');
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent;
+                if (title === type) {
+                    const countElement = card.querySelector('.text-sm.text-gray-500');
+                    const currentCount = parseInt(countElement.textContent) || 0;
+                    countElement.textContent = `${currentCount + 1} files uploaded`;
+                }
+            });
+        }
+
+        // Chart instances
+        let portfolioChart, performanceChart;
+
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Portfolio Distribution Chart
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            portfolioChart = new Chart(portfolioCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Personal Loan', 'Home Loan', 'Business Loan', 'Vehicle Loan', 'Education Loan'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Monthly Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Disbursement',
+                        data: [8.5, 9.2, 10.1, 11.3, 12.0, 12.8],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Collection',
+                        data: [7.8, 8.5, 9.2, 10.5, 11.2, 11.9],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value + ' Cr';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Simulate real-time updates
+            setInterval(() => {
+                // Update metrics with random variations
+                const portfolioValue = document.querySelector('.metric-card p');
+                const currentValue = parseFloat(portfolioValue.textContent.replace('₹', '').replace(' Cr', ''));
+                const newValue = (currentValue + (Math.random() - 0.5) * 0.1).toFixed(1);
+                portfolioValue.textContent = `₹${newValue} Cr`;
+            }, 5000);
+
+            // Quick action buttons
+            document.querySelectorAll('.bg-gradient-to-r button').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Create a temporary notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+                    notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Action initiated successfully!`;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(0)';
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(100%)';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                });
+            });
+
+            // Financial year and month change handlers
+            document.getElementById('financialYear').addEventListener('change', updateDashboard);
+            document.getElementById('month').addEventListener('change', updateDashboard);
+
+            // Refresh button handler
+            document.getElementById('refreshBtn').addEventListener('click', refreshData);
+        });
+
+        // Update dashboard when financial year or month changes
+        function updateDashboard() {
+            const financialYear = document.getElementById('financialYear').value;
+            const month = document.getElementById('month').value;
+            
+            // Show loading state
+            showLoading();
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // Update charts with new data based on selection
+                updateChartsData(financialYear, month);
+                updateMetrics(financialYear, month);
+                
+                // Hide loading state
+                hideLoading();
+                
+                // Show notification
+                showNotification(`Data updated for ${getMonthName(month)} ${financialYear}`);
+            }, 1000);
+        }
+
+        // Refresh data function
+        function refreshData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.classList.add('refresh-spin');
+            
+            // Show loading state
+            showLoading();
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Generate new random data
+                updateChartsData();
+                updateMetrics();
+                
+                // Hide loading state
+                hideLoading();
+                refreshIcon.classList.remove('refresh-spin');
+                
+                // Show notification
+                showNotification('Data refreshed successfully!');
+            }, 1500);
+        }
+
+        // Show loading state
+        function showLoading() {
+            // Add loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlay';
+            loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            loadingOverlay.innerHTML = `
+                <div class="bg-white rounded-lg p-6 flex flex-col items-center space-y-4">
+                    <div class="loading-spinner"></div>
+                    <p class="text-gray-700">Loading data...</p>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+        }
+
+        // Hide loading state
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.remove();
+            }
+        }
+
+        // Update charts with new data
+        function updateChartsData(financialYear = '2023-24', month = '6') {
+            // Generate random data based on selection
+            const portfolioData = [
+                Math.floor(Math.random() * 20) + 30,
+                Math.floor(Math.random() * 15) + 20,
+                Math.floor(Math.random() * 15) + 15,
+                Math.floor(Math.random() * 10) + 10,
+                Math.floor(Math.random() * 10) + 5
+            ];
+            
+            const performanceData = {
+                disbursement: Array.from({length: 6}, () => Math.random() * 5 + 8),
+                collection: Array.from({length: 6}, () => Math.random() * 4 + 7)
+            };
+            
+            // Update portfolio chart
+            portfolioChart.data.datasets[0].data = portfolioData;
+            portfolioChart.update();
+            
+            // Update performance chart
+            performanceChart.data.datasets[0].data = performanceData.disbursement;
+            performanceChart.data.datasets[1].data = performanceData.collection;
+            performanceChart.update();
+        }
+
+        // Update metrics
+        function updateMetrics(financialYear = '2023-24', month = '6') {
+            const metrics = [
+                { value: (Math.random() * 20 + 40).toFixed(1), suffix: ' Cr' },
+                { value: (Math.random() * 10 + 10).toFixed(1), suffix: ' Cr' },
+                { value: Math.floor(Math.random() * 2000 + 7000).toLocaleString(), suffix: '' },
+                { value: (Math.random() * 2 + 2).toFixed(2), suffix: '%' }
+            ];
+            
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach((card, index) => {
+                const valueElement = card.querySelector('p');
+                valueElement.textContent = `₹${metrics[index].value}${metrics[index].suffix}`;
+            });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+            notification.innerHTML = `<i class="fas fa-info-circle mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Get month name
+        function getMonthName(month) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[parseInt(month) - 1];
+        }
+    </script>
+</body>
+</html>

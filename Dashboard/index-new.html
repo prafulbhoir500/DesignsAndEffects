@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBFC Comprehensive Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">NBFC Comprehensive Dashboard</h1>
+                <p class="mt-1 text-sm text-gray-500">Financial Performance Management System</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <select
+                        class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:border-blue-500">
+                        <option>Current Month</option>
+                        <option>Last Quarter</option>
+                        <option>Current Year</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex h-screen pt-16">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-white shadow-md overflow-y-auto">
+            <div class="p-4">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Dashboard Sections</h2>
+
+                <!-- Overview Section -->
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-700 mb-2 flex items-center">
+                        <i class="fas fa-chart-pie mr-2 text-blue-500"></i> Overview
+                    </h3>
+                    <ul class="space-y-1 pl-6">
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('abc')">
+                                ABC
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('dpd')">
+                                DPD
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('dcco')">
+                                DCCO
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('overdue')">
+                                Overdue
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('new-disbursement')">
+                                New Disbursement
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('closed-accounts')">
+                                Closed Accounts
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('npa')">
+                                NPA
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('write-off')">
+                                Write-Off
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('suit-filed')">
+                                Suit Filed
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Summary Section -->
+                <div>
+                    <h3 class="text-md font-medium text-gray-700 mb-2 flex items-center">
+                        <i class="fas fa-file-alt mr-2 text-green-500"></i> Summary
+                    </h3>
+                    <ul class="space-y-1 pl-6">
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('pos')">
+                                POS
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('disbursements')">
+                                Disbursements
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('income')">
+                                Income
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('collection-efficiency')">
+                                Collection Efficiency
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('overdue-summary')">
+                                Overdue
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('ews')">
+                                EWS
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('project-details')">
+                                Project Details
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('conduct-table')">
+                                Conduct Table
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="block py-2 px-4 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded"
+                                onclick="showContent('loan-movement')">
+                                Loan Movement
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <!-- Default Content - ABC Dashboard -->
+            <div id="content" class="space-y-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">ABC Dashboard</h2>
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                            <h3 class="text-lg font-medium text-gray-500">Total Portfolio</h3>
+                            <p class="text-2xl font-bold text-gray-900">₹485.2 Cr</p>
+                            <p class="text-sm text-green-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> 5.2% from last month
+                            </p>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                            <h3 class="text-lg font-medium text-gray-500">Active Accounts</h3>
+                            <p class="text-2xl font-bold text-gray-900">1,245</p>
+                            <p class="text-sm text-green-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> 3.7% from last month
+                            </p>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                            <h3 class="text-lg font-medium text-gray-500">Delinquent Accounts</h3>
+                            <p class="text-2xl font-bold text-gray-900">89</p>
+                            <p class="text-sm text-red-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> 1.2% from last month
+                            </p>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                            <h3 class="text-lg font-medium text-gray-500">NPA Ratio</h3>
+                            <p class="text-2xl font-bold text-gray-900">3.8%</p>
+                            <p class="text-sm text-green-600 mt-1">
+                                <i class="fas fa-arrow-down"></i> 0.4% from last month
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">Portfolio Distribution</h3>
+                            <div class="h-80">
+                                <canvas id="portfolioChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">Account Status</h3>
+                            <div class="h-80">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regional Performance Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">Regional Performance</h3>
+                            <button class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded">
+                                <i class="fas fa-download mr-1"></i> Export
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Region</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Portfolio (Cr)</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Active Accounts</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Delinquent Accounts</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            NPA Ratio (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            Gujarat</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">125.8</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">324</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">22</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3.2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">MMR
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">98.4</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">285</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3.5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Pune
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">78.6</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">198</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3.8</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            Bangalore</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">65.2</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">176</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">12</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3.9</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            Chennai</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">52.4</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">142</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">4.1</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Portfolio Distribution Chart
+        const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+        const portfolioChart = new Chart(portfolioCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Gujarat', 'MMR', 'Pune', 'Bangalore', 'Chennai', 'Others'],
+                datasets: [{
+                    data: [125.8, 98.4, 78.6, 65.2, 52.4, 64.8],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(199, 199, 199, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.raw + ' Cr';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Account Status Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        const statusChart = new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Active', 'Delinquent', 'NPA', 'Closed', 'Written Off'],
+                datasets: [{
+                    label: 'Number of Accounts',
+                    data: [1245, 89, 47, 156, 32],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(199, 199, 199, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(199, 199, 199, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Accounts'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Function to show different content based on navigation
+        function showContent(section) {
+            const contentDiv = document.getElementById('content');
+
+            // This is a simplified version - in a real application, you would load different content
+            // for each section. For now, we'll just update the title and show a placeholder.
+
+            let title = '';
+            let description = '';
+
+            switch (section) {
+                case 'abc':
+                    title = 'ABC Dashboard';
+                    description = 'Overview of Accounts, Business, and Collections';
+                    break;
+                case 'dpd':
+                    title = 'Days Past Due (DPD) Dashboard';
+                    description = 'Analysis of overdue payments by days past due';
+                    break;
+                case 'dcco':
+                    title = 'DCCO Dashboard';
+                    description = 'Delinquent Credit Card Operations analysis';
+                    break;
+                case 'overdue':
+                    title = 'Overdue Dashboard';
+                    description = 'Overdue accounts and collection status';
+                    break;
+                case 'new-disbursement':
+                    title = 'New Disbursement Dashboard';
+                    description = 'New loans disbursed in the current period';
+                    break;
+                case 'closed-accounts':
+                    title = 'Closed Accounts Dashboard';
+                    description = 'Accounts closed in the current period';
+                    break;
+                case 'npa':
+                    title = 'NPA Dashboard';
+                    description = 'Non-Performing Assets analysis and trends';
+                    break;
+                case 'write-off':
+                    title = 'Write-Off Dashboard';
+                    description = 'Accounts written off during the period';
+                    break;
+                case 'suit-filed':
+                    title = 'Suit Filed Dashboard';
+                    description = 'Legal cases filed against defaulters';
+                    break;
+                case 'pos':
+                    title = 'POS Dashboard';
+                    description = 'Point of Sale analysis and performance';
+                    break;
+                case 'disbursements':
+                    title = 'Disbursements Dashboard';
+                    description = 'Loan disbursement trends and analysis';
+                    break;
+                case 'income':
+                    title = 'Income Dashboard';
+                    description = 'Revenue and income analysis';
+                    break;
+                case 'collection-efficiency':
+                    title = 'Collection Efficiency Dashboard';
+                    description = 'Collection performance and efficiency metrics';
+                    break;
+                case 'overdue-summary':
+                    title = 'Overdue Summary Dashboard';
+                    description = 'Summary of overdue accounts and aging';
+                    break;
+                case 'ews':
+                    title = 'EWS Dashboard';
+                    description = 'Early Warning System indicators and alerts';
+                    break;
+                case 'project-details':
+                    title = 'Project Details Dashboard';
+                    description = 'Project-specific loan details and status';
+                    break;
+                case 'conduct-table':
+                    title = 'Conduct Table Dashboard';
+                    description = 'Account conduct and payment behavior analysis';
+                    break;
+                case 'loan-movement':
+                    title = 'Loan Movement Dashboard';
+                    description = 'Loan status transitions and movements';
+                    break;
+                default:
+                    title = 'Dashboard';
+                    description = 'Select a section from the navigation';
+            }
+
+            contentDiv.innerHTML = `
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">${title}</h2>
+                    <p class="text-gray-600 mb-6">${description}</p>
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-info-circle text-blue-500"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700">
+                                    This is a placeholder for the ${title} content. In a real implementation, this section would contain relevant charts, tables, and metrics specific to this dashboard.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                            <h3 class="text-lg font-medium text-gray-500">Metric 1</h3>
+                            <p class="text-2xl font-bold text-gray-900">₹125.8 Cr</p>
+                            <p class="text-sm text-green-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> 5.2% from last month
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                            <h3 class="text-lg font-medium text-gray-500">Metric 2</h3>
+                            <p class="text-2xl font-bold text-gray-900">1,245</p>
+                            <p class="text-sm text-green-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> 3.7% from last month
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                            <h3 class="text-lg font-medium text-gray-500">Metric 3</h3>
+                            <p class="text-2xl font-bold text-gray-900">89</p>
+                            <p class="text-sm text-red-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> 1.2% from last month
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-white rounded-lg shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Sample Chart for ${title}</h3>
+                        <div class="h-80">
+                            <canvas id="sampleChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Create a sample chart for the selected section
+            const sampleCtx = document.getElementById('sampleChart').getContext('2d');
+            new Chart(sampleCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Sample Data',
+                        data: [12, 19, 3, 5, 2, 3],
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBFC Dashboard - Financial Analytics</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #111827;
+            --light-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .notification-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 9999px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .user-profile:hover {
+            background-color: var(--light-bg);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 72px;
+            width: 250px;
+            height: calc(100vh - 72px);
+            background-color: var(--dark-bg);
+            overflow-y: auto;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: #9ca3af;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: white;
+        }
+
+        .menu-item.active {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: white;
+        }
+
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--secondary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            max-width: 1400px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.primary {
+            background-color: rgba(30, 58, 138, 0.1);
+            color: var(--primary-color);
+        }
+
+        .stat-icon.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .stat-icon.warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .stat-icon.danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-action-btn {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-action-btn:hover {
+            background-color: var(--light-bg);
+        }
+
+        .chart-action-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Tables */
+        .table-card {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            width: 250px;
+            font-size: 0.875rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table tr:hover {
+            background-color: var(--light-bg);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-badge.active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .status-badge.overdue {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        /* Responsive */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box input {
+                width: 150px;
+            }
+
+            .header-content {
+                padding: 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark-bg);
+            color: white;
+            text-align: center;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>FinanceFlow NBFC</span>
+            </div>
+            <div class="header-actions">
+                <button class="notification-btn tooltip">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                    <span class="tooltiptext">3 new notifications</span>
+                </button>
+                <div class="user-profile">
+                    <div class="user-avatar">JD</div>
+                    <div>
+                        <div style="font-weight: 600;">John Doe</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <a href="#" class="menu-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Loans</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Payments</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>NPA Management</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card" onclick="showDetails('totalAssets')">
+                <div class="stat-header">
+                    <span class="stat-title">Total Assets</span>
+                    <div class="stat-icon primary">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹45.8M</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12.5% from last month</span>
+                </div>
+            </div>
+
+            <div class="stat-card" onclick="showDetails('loanPortfolio')">
+                <div class="stat-header">
+                    <span class="stat-title">Loan Portfolio</span>
+                    <div class="stat-icon success">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹32.4M</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8.3% from last month</span>
+                </div>
+            </div>
+
+            <div class="stat-card" onclick="showDetails('npa')">
+                <div class="stat-header">
+                    <span class="stat-title">NPA Ratio</span>
+                    <div class="stat-icon danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-value">3.2%</div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>0.5% increase</span>
+                </div>
+            </div>
+
+            <div class="stat-card" onclick="showDetails('profit')">
+                <div class="stat-header">
+                    <span class="stat-title">Net Profit</span>
+                    <div class="stat-icon warning">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹4.2M</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>15.7% from last month</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Loan Portfolio Distribution</h3>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn active" onclick="updateChart('portfolio', 'type')">By
+                            Type</button>
+                        <button class="chart-action-btn" onclick="updateChart('portfolio', 'tenure')">By Tenure</button>
+                    </div>
+                </div>
+                <canvas id="portfolioChart" width="400" height="300"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Monthly Disbursement Trend</h3>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn active" onclick="updateChart('disbursement', '6m')">6M</button>
+                        <button class="chart-action-btn" onclick="updateChart('disbursement', '1y')">1Y</button>
+                        <button class="chart-action-btn" onclick="updateChart('disbursement', '2y')">2Y</button>
+                    </div>
+                </div>
+                <canvas id="disbursementChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activities Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3 class="table-title">Recent Loan Applications</h3>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search applications..." onkeyup="filterTable(this.value)">
+                </div>
+            </div>
+            <table class="data-table" id="applicationsTable">
+                <thead>
+                    <tr>
+                        <th>Application ID</th>
+                        <th>Customer Name</th>
+                        <th>Loan Amount</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>LA-2024-001</td>
+                        <td>Rajesh Kumar</td>
+                        <td>₹5,00,000</td>
+                        <td>Personal Loan</td>
+                        <td><span class="status-badge active">Approved</span></td>
+                        <td>2024-01-15</td>
+                        <td><button class="chart-action-btn" onclick="viewApplication('LA-2024-001')">View</button></td>
+                    </tr>
+                    <tr>
+                        <td>LA-2024-002</td>
+                        <td>Priya Sharma</td>
+                        <td>₹12,00,000</td>
+                        <td>Home Loan</td>
+                        <td><span class="status-badge pending">Under Review</span></td>
+                        <td>2024-01-14</td>
+                        <td><button class="chart-action-btn" onclick="viewApplication('LA-2024-002')">View</button></td>
+                    </tr>
+                    <tr>
+                        <td>LA-2024-003</td>
+                        <td>Amit Patel</td>
+                        <td>₹8,50,000</td>
+                        <td>Business Loan</td>
+                        <td><span class="status-badge active">Approved</span></td>
+                        <td>2024-01-13</td>
+                        <td><button class="chart-action-btn" onclick="viewApplication('LA-2024-003')">View</button></td>
+                    </tr>
+                    <tr>
+                        <td>LA-2024-004</td>
+                        <td>Sneha Reddy</td>
+                        <td>₹3,00,000</td>
+                        <td>Personal Loan</td>
+                        <td><span class="status-badge overdue">Documentation Pending</span></td>
+                        <td>2024-01-12</td>
+                        <td><button class="chart-action-btn" onclick="viewApplication('LA-2024-004')">View</button></td>
+                    </tr>
+                    <tr>
+                        <td>LA-2024-005</td>
+                        <td>Vikram Singh</td>
+                        <td>₹20,00,000</td>
+                        <td>Home Loan</td>
+                        <td><span class="status-badge pending">Under Review</span></td>
+                        <td>2024-01-11</td>
+                        <td><button class="chart-action-btn" onclick="viewApplication('LA-2024-005')">View</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Charts
+        let portfolioChart, disbursementChart;
+
+        // Portfolio Chart
+        const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+        portfolioChart = new Chart(portfolioCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Personal Loan', 'Home Loan', 'Business Loan', 'Vehicle Loan', 'Education Loan'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Disbursement Chart
+        const disbursementCtx = document.getElementById('disbursementChart').getContext('2d');
+        disbursementChart = new Chart(disbursementCtx, {
+            type: 'line',
+            data: {
+                labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
+                datasets: [{
+                    label: 'Disbursement Amount (₹M)',
+                    data: [4.2, 5.1, 4.8, 5.5, 6.2, 5.8],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return '₹' + value + 'M';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Update Chart Function
+        function updateChart(chartType, filter) {
+            if (chartType === 'portfolio') {
+                // Update button states
+                document.querySelectorAll('.chart-actions button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+
+                // Update chart data based on filter
+                if (filter === 'type') {
+                    portfolioChart.data.labels = ['Personal Loan', 'Home Loan', 'Business Loan', 'Vehicle Loan', 'Education Loan'];
+                    portfolioChart.data.datasets[0].data = [35, 25, 20, 15, 5];
+                } else if (filter === 'tenure') {
+                    portfolioChart.data.labels = ['< 1 Year', '1-3 Years', '3-5 Years', '5-10 Years', '> 10 Years'];
+                    portfolioChart.data.datasets[0].data = [15, 30, 25, 20, 10];
+                }
+                portfolioChart.update();
+            } else if (chartType === 'disbursement') {
+                // Update button states
+                const buttons = event.target.parentElement.querySelectorAll('button');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                // Update chart data based on filter
+                if (filter === '6m') {
+                    disbursementChart.data.labels = ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
+                    disbursementChart.data.datasets[0].data = [4.2, 5.1, 4.8, 5.5, 6.2, 5.8];
+                } else if (filter === '1y') {
+                    disbursementChart.data.labels = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
+                    disbursementChart.data.datasets[0].data = [3.8, 4.0, 4.2, 4.5, 4.8, 5.0, 4.2, 5.1, 4.8, 5.5, 6.2, 5.8];
+                } else if (filter === '2y') {
+                    disbursementChart.data.labels = Array.from({ length: 24 }, (_, i) => {
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        return months[i % 12] + ' ' + (2023 + Math.floor(i / 12));
+                    });
+                    disbursementChart.data.datasets[0].data = Array.from({ length: 24 }, () => Math.random() * 3 + 3);
+                }
+                disbursementChart.update();
+            }
+        }
+
+        // Filter Table
+        function filterTable(searchTerm) {
+            const table = document.getElementById('applicationsTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(searchTerm.toLowerCase())) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                row.style.display = found ? '' : 'none';
+            }
+        }
+
+        // Show Details
+        function showDetails(type) {
+            const messages = {
+                totalAssets: 'Total Assets include all financial assets under management including loans, investments, and cash reserves.',
+                loanPortfolio: 'Loan Portfolio represents the total value of all active loans disbursed to customers.',
+                npa: 'Non-Performing Assets (NPA) ratio indicates the percentage of loans that are in default or close to default.',
+                profit: 'Net Profit is the total revenue minus all expenses and provisions for the period.'
+            };
+
+            // Create a temporary notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: white;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                max-width: 300px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.innerHTML = `
+                <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">${type.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</h4>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">${messages[type]}</p>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // View Application
+        function viewApplication(id) {
+            alert(`Viewing application details for: ${id}\n\nThis would typically open a detailed view of the loan application with customer information, documents, and processing status.`);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update random stat value
+            const stats = document.querySelectorAll('.stat-value');
+            const randomStat = stats[Math.floor(Math.random() * stats.length)];
+            const currentValue = parseFloat(randomStat.textContent.replace(/[₹,M%]/g, ''));
+            const change = (Math.random() - 0.5) * 0.1;
+            const newValue = currentValue + (currentValue * change);
+
+            if (randomStat.textContent.includes('%')) {
+                randomStat.textContent = newValue.toFixed(1) + '%';
+            } else if (randomStat.textContent.includes('₹')) {
+                randomStat.textContent = '₹' + newValue.toFixed(1) + 'M';
+            }
+        }, 5000);
+    </script>
+</body>
+
+</html>
