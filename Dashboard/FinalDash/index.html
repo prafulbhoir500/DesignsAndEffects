@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: 70px 1fr;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar main";
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        .header {
+            grid-area: header;
+            background-color: var(--white);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-btn,
+        .profile-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--gray);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .notification-btn:hover,
+        .profile-btn:hover {
+            color: var(--primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-btn img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .logo h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: rgba(79, 70, 229, 0.2);
+            color: var(--white);
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content Styles */
+        .main {
+            grid-area: main;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: var(--gray);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--white);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-title {
+            font-size: 0.875rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-card-icon.revenue {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-card-icon.users {
+            background-color: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-card-icon.orders {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-card-icon.growth {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .stat-card-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-change {
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-card-change.positive {
+            color: var(--success);
+        }
+
+        .stat-card-change.negative {
+            color: var(--danger);
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background-color: var(--white);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .chart-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-action-btn {
+            background: none;
+            border: 1px solid var(--gray);
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-action-btn:hover,
+        .chart-action-btn.active {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .data-table-container {
+            background-color: var(--white);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .data-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .data-table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+            width: 250px;
+            font-size: 0.875rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.delivered {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-badge.processing {
+            background-color: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .status-badge.cancelled {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .action-btn:hover {
+            color: var(--primary);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 992px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "main";
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box input {
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <h1>Analytics Dashboard</h1>
+            <div class="header-actions">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="profile-btn">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile">
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h2>Dashboard</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Orders</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-box"></i>
+                        <span>Products</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="dashboard-header">
+                <h2>Dashboard Overview</h2>
+                <p>Monitor your business metrics and performance</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3 class="stat-card-title">Total Revenue</h3>
+                        <div class="stat-card-icon revenue">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">$45,231.89</div>
+                    <div class="stat-card-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12.5% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3 class="stat-card-title">Active Users</h3>
+                        <div class="stat-card-icon users">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">2,350</div>
+                    <div class="stat-card-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8.2% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3 class="stat-card-title">New Orders</h3>
+                        <div class="stat-card-icon orders">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">1,254</div>
+                    <div class="stat-card-change negative">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>3.1% from last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3 class="stat-card-title">Growth Rate</h3>
+                        <div class="stat-card-icon growth">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">24.5%</div>
+                    <div class="stat-card-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>5.7% from last month</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3 class="chart-card-title">Revenue Overview</h3>
+                        <div class="chart-card-actions">
+                            <button class="chart-action-btn active">Week</button>
+                            <button class="chart-action-btn">Month</button>
+                            <button class="chart-action-btn">Year</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3 class="chart-card-title">Sales Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="data-table-container">
+                <div class="data-table-header">
+                    <h3 class="data-table-title">Recent Orders</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search orders...">
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD-001</td>
+                            <td>John Smith</td>
+                            <td>Jun 15, 2023</td>
+                            <td>$125.99</td>
+                            <td><span class="status-badge delivered">Delivered</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-002</td>
+                            <td>Emma Johnson</td>
+                            <td>Jun 14, 2023</td>
+                            <td>$89.50</td>
+                            <td><span class="status-badge processing">Processing</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-003</td>
+                            <td>Michael Brown</td>
+                            <td>Jun 13, 2023</td>
+                            <td>$210.75</td>
+                            <td><span class="status-badge pending">Pending</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-004</td>
+                            <td>Sarah Davis</td>
+                            <td>Jun 12, 2023</td>
+                            <td>$65.30</td>
+                            <td><span class="status-badge delivered">Delivered</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-005</td>
+                            <td>Robert Wilson</td>
+                            <td>Jun 11, 2023</td>
+                            <td>$155.20</td>
+                            <td><span class="status-badge cancelled">Cancelled</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [3200, 4500, 3800, 5200, 4800, 6100, 5500],
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderColor: 'rgba(79, 70, 229, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return '$' + value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(salesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Beauty', 'Sports'],
+                datasets: [{
+                    data: [35, 25, 20, 12, 8],
+                    backgroundColor: [
+                        'rgba(79, 70, 229, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(139, 92, 246, 0.8)'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function (context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Chart Action Buttons
+        const chartActionBtns = document.querySelectorAll('.chart-action-btn');
+        chartActionBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                chartActionBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // In a real app, this would update the chart data based on the selected time period
+                // For demo purposes, we'll just log the selection
+                console.log('Selected period:', this.textContent);
+            });
+        });
+
+        // Navigation Links
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-box input');
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const tableRows = document.querySelectorAll('.data-table tbody tr');
+
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update a random stat card value
+            const statCards = document.querySelectorAll('.stat-card-value');
+            const randomCard = statCards[Math.floor(Math.random() * statCards.length)];
+
+            if (randomCard.textContent.includes('$')) {
+                const currentValue = parseFloat(randomCard.textContent.replace('$', '').replace(',', ''));
+                const change = (Math.random() * 100) - 50;
+                const newValue = currentValue + change;
+                randomCard.textContent = '$' + newValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            } else if (randomCard.textContent.includes('%')) {
+                const currentValue = parseFloat(randomCard.textContent.replace('%', ''));
+                const change = (Math.random() * 2) - 1;
+                const newValue = currentValue + change;
+                randomCard.textContent = newValue.toFixed(1) + '%';
+            } else {
+                const currentValue = parseInt(randomCard.textContent.replace(',', ''));
+                const change = Math.floor((Math.random() * 20) - 10);
+                const newValue = currentValue + change;
+                randomCard.textContent = newValue.toLocaleString();
+            }
+        }, 5000);
+    </script>
+</body>
+
+</html>

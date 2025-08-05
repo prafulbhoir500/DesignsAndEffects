@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBFC Dashboard - Financial Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .sidebar-item:hover {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .table-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .notification-badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <button id="sidebarToggle" class="p-2 rounded-md text-gray-600 hover:bg-gray-100 lg:hidden">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="flex items-center ml-4">
+                        <i class="fas fa-chart-line text-blue-600 text-2xl mr-3"></i>
+                        <h1 class="text-xl font-semibold text-gray-800">NBFC Dashboard</h1>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search..."
+                            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+
+                    <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <div class="flex items-center space-x-3">
+                        <img src="https://picsum.photos/seed/user1/40/40.jpg" alt="User" class="w-10 h-10 rounded-full">
+                        <div class="hidden md:block">
+                            <p class="text-sm font-medium text-gray-700">John Doe</p>
+                            <p class="text-xs text-gray-500">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40">
+        <nav class="p-4">
+            <ul class="space-y-2">
+                <li>
+                    <a href="#"
+                        class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:text-blue-600 transition-colors">
+                        <i class="fas fa-home w-5 mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"
+                        class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:text-blue-600 transition-colors">
+                        <i class="fas fa-hand-holding-usd w-5 mr-3"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"
+                        class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:text-blue-600 transition-colors">
+                        <i class="fas fa-users w-5 mr-3"></i>
+                        <span>Customers</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"
+                        class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:text-blue-600 transition-colors">
+                        <i class="fas fa-chart-bar w-5 mr-3"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"
+                        class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:text-blue-600 transition-colors">
+                        <i class="fas fa-file-invoice-dollar w-5 mr-3"></i>
+                        <span>Transactions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#"
+                        class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:text-blue-600 transition-colors">
+                        <i class="fas fa-cog w-5 mr-3"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 pt-16">
+        <div class="p-4 sm:p-6 lg:p-8">
+            <!-- Date Filter -->
+            <div
+                class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Financial Overview</h2>
+                    <p class="text-gray-600 mt-1">Monitor your NBFC performance in real-time</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>Last Quarter</option>
+                        <option>Last Year</option>
+                    </select>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-green-600 font-medium">+12.5%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm">Total Portfolio</h3>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">₹45.2M</p>
+                </div>
+
+                <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-green-600 font-medium">+8.3%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm">Active Loans</h3>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">1,234</p>
+                </div>
+
+                <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <i class="fas fa-percentage text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-red-600 font-medium">-2.1%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm">NPA Ratio</h3>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">3.2%</p>
+                </div>
+
+                <div class="card-hover bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-orange-100 rounded-lg">
+                            <i class="fas fa-coins text-orange-600 text-xl"></i>
+                        </div>
+                        <span class="text-sm text-green-600 font-medium">+15.7%</span>
+                    </div>
+                    <h3 class="text-gray-600 text-sm">Monthly Revenue</h3>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">₹2.8M</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Portfolio Growth Chart -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800">Portfolio Growth</h3>
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    <canvas id="portfolioChart" height="300"></canvas>
+                </div>
+
+                <!-- Loan Distribution Chart -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800">Loan Distribution</h3>
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    <canvas id="loanDistributionChart" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activities and Performance -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Recent Activities -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800">Recent Activities</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Customer</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Type</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Amount</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="table-row">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img src="https://picsum.photos/seed/customer1/32/32.jpg" alt=""
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">Rajesh Kumar</p>
+                                                <p class="text-sm text-gray-500">ID: NBFC001</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Personal Loan</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹5,00,000
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 hours ago</td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img src="https://picsum.photos/seed/customer2/32/32.jpg" alt=""
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">Priya Sharma</p>
+                                                <p class="text-sm text-gray-500">ID: NBFC002</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Business Loan</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹15,00,000
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5 hours ago</td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img src="https://picsum.photos/seed/customer3/32/32.jpg" alt=""
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">Amit Patel</p>
+                                                <p class="text-sm text-gray-500">ID: NBFC003</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Home Loan</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹25,00,000
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Disbursed</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1 day ago</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6">Performance Metrics</h3>
+
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Collection Efficiency</span>
+                                <span class="text-sm font-medium text-gray-900">92%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Customer Satisfaction</span>
+                                <span class="text-sm font-medium text-gray-900">88%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Digital Adoption</span>
+                                <span class="text-sm font-medium text-gray-900">76%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 76%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Risk Compliance</span>
+                                <span class="text-sm font-medium text-gray-900">95%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-orange-600 h-2 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <button
+                            class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            View Detailed Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Sidebar toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Portfolio Growth Chart
+        const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+        const portfolioChart = new Chart(portfolioCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Portfolio Value (₹M)',
+                    data: [32, 34, 35, 37, 38, 40, 41, 42, 43, 44, 45, 45.2],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function (value) {
+                                return '₹' + value + 'M';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Loan Distribution Chart
+        const loanCtx = document.getElementById('loanDistributionChart').getContext('2d');
+        const loanDistributionChart = new Chart(loanCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Personal Loans', 'Business Loans', 'Home Loans', 'Vehicle Loans', 'Education Loans'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(16, 185, 129)',
+                        'rgb(251, 146, 60)',
+                        'rgb(147, 51, 234)',
+                        'rgb(236, 72, 153)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+
+        // Animate elements on load
+        window.addEventListener('load', () => {
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-fade-in');
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            // Implement search logic here
+            console.log('Searching for:', searchTerm);
+        });
+
+        // Export report functionality
+        document.querySelector('button:has(.fa-download)').addEventListener('click', () => {
+            // Simulate report generation
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                alert('Report exported successfully!');
+            }, 2000);
+        });
+
+        // Notification click handler
+        document.querySelector('.fa-bell').parentElement.addEventListener('click', () => {
+            // Show notifications dropdown
+            console.log('Show notifications');
+        });
+
+        // Add hover effects to table rows
+        document.querySelectorAll('.table-row').forEach(row => {
+            row.addEventListener('click', () => {
+                console.log('Row clicked:', row.querySelector('.font-medium').textContent);
+            });
+        });
+    </script>
+</body>
+
+</html>
